@@ -2,7 +2,7 @@ from nameko.rpc import rpc
 from database import SessionLocal
 
 class MasterService:
-    name = "master-service"
+    name = "master_service"
 
     # @rpc
     # def hello(self, name):
