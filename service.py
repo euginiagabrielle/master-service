@@ -50,7 +50,7 @@ class MasterService:
     def get_unit_by_id(self, unit_id):
         db = SessionLocal()
         try:
-            unit = db.query(UnitAkademik).filter(UnitAkademik.unit_id == unit.id).first()
+            unit = db.query(UnitAkademik).filter(UnitAkademik.unit_id == unit_id).first()
             if not unit:
                 return {"status": "error", "message": "Unit Akademik tidak ditemukan"}
             return {
