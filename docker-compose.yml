@@ -23,6 +23,10 @@ services:
     depends_on:
       - rabbitmq
       - master-db
+    volumes:
+      - .:/app
+    environment:
+      - NAMEKO_CONFIG=/app/config.yml
 
 volumes:
   pgdata:
