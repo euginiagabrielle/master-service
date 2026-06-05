@@ -27,6 +27,16 @@ services:
       - .:/app
     environment:
       - NAMEKO_CONFIG=/app/config.yml
+  
+  api-gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rabbitmq
+      - master-service
+    volumes:
+      - ./gateway:/app 
 
 volumes:
   pgdata:
