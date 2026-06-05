@@ -4,7 +4,7 @@ from typing import Optional
 from nameko.standalone.rpc import ClusterRpcProxy
 
 router = APIRouter(
-    prefix="/api/units",
+    prefix="/master/units",
     tags=["Unit Akademik"]
 )
 
@@ -44,7 +44,7 @@ def get_unit_by_id(unit_id: str):
 @router.put("/{unit_id}")
 def update_unit(unit_id: str, unit: UnitAkademikUpdate):
     with ClusterRpcProxy(CONFIG) as rpc:
-        result = repc.master_service.update_unit(
+        result = rpc.master_service.update_unit(
             unit_id=unit_id,
             name=unit.name,
             type=unit.type,
