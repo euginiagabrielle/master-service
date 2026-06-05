@@ -36,6 +36,8 @@ services:
       - .:/app
     environment:
       - NAMEKO_CONFIG=/app/config.yml
+    networks:
+      - sia_net
     restart: always
   
   gateway:
