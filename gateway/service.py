@@ -85,7 +85,7 @@ class GatewayService:
         )
         return Response(json.dumps(result), mimetype='application/json')
     
-    @http('DELETE', 'master/lecturers/<int:lecturer_id>')
+    @http('DELETE', '/master/lecturers/<int:lecturer_id>')
     def delete_lecturer(self, request, lecturer_id):
         result = self.master_service.delete_lecturer(lecturer_id)
         return Response(json.dumps(result), mimetype='application/json')
