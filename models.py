@@ -13,7 +13,7 @@ class UnitAkademik(Base):
 
     parent = relationship("UnitAkademik", remote_side=[unit_id])
 
-class Lecturer(Base):
+class Dosen(Base):
     __tablename__ = "lecturers"
 
     lecturer_id = Column(String, primary_key=True)

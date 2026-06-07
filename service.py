@@ -1,7 +1,7 @@
 from nameko.rpc import rpc
 from database import SessionLocal
 
-from models import UnitAkademik, Lecturer
+from models import UnitAkademik, Dosen
 
 class MasterService:
     name = "master_service"
@@ -103,7 +103,7 @@ class MasterService:
     def create_lecturer(self, nip, name, email, password, status, unit_id):
         db = SessionLocal()
         try:
-            lecturer = Lecturer(
+            lecturer = Dosen(
                 nip=nip,
                 lecturer_name=name,
                 lecturer_password=password,
@@ -125,7 +125,7 @@ class MasterService:
     def get_all_lecturers(self):
         db = SessionLocal()
         try:
-            lecturers = db.query(Lecturer).all()
+            lecturers = db.query(Dosen).all()
             return [
                 {
                     "id": l.lecturer_id,
@@ -145,7 +145,7 @@ class MasterService:
     def get_lecturer_by_id(self, lecturer_id):
         db = SessionLocal()
         try:
-            lecturer = db.query(Lecturer).filter(Lecturer.lecturer_id == lecturer_id).first()
+            lecturer = db.query(Dosen).filter(Dosen.lecturer_id == lecturer_id).first()
             if not lecturer:
                 return {"status": "error", "message": "Dosen tidak ditemukan"}
             
@@ -167,7 +167,7 @@ class MasterService:
     def update_lecturer(self, lecturer_id, nip=None, name=None, email=None, password=None, status=None, unit_id=None):
         db = SessionLocal()
         try:
-            lecturer = db.query(Lecturer).filter(Lecturer.lecturer_id == lecturer_id).first()
+            lecturer = db.query(Dosen).filter(Dosen.lecturer_id == lecturer_id).first()
             if not lecturer:
                 return {"status": "error", "message": "Dosen tidak ditemukan"}
             
@@ -190,7 +190,7 @@ class MasterService:
     def delete_lecturer(self, lecturer_id):
         db = SessionLocal()
         try:
-            lecturer = db.query(Lecturer).filter(Lecturer.lecturer_id == lecturer_id).first()
+            lecturer = db.query(Dosen).filter(Dosen.lecturer_id == lecturer_id).first()
             if not lecturer:
                 return {"status": "error", "message": "Dosen tidak ditemukan"}
             
