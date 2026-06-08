@@ -106,6 +106,7 @@ class MasterService:
             lecturer = Dosen(
                 nip=nip,
                 lecturer_name=name,
+                lecturer_email=email,
                 lecturer_password=password,
                 lecturer_status=status,
                 unit_id=unit_id

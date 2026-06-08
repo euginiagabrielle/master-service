@@ -18,7 +18,7 @@ class UnitAkademik(Base):
 class Dosen(Base):
     __tablename__ = "lecturers"
 
-    lecturer_id = Column(String, primary_key=True)
+    lecturer_id = Column(Integer, primary_key=True)
     nip = Column(String, unique=True, nullable=False)
     lecturer_name = Column(String, nullable=False)
     lecturer_email = Column(String, nullable=False)
@@ -54,7 +54,7 @@ class Mahasiswa(Base):
     student_email = Column(String, nullable=False)
     student_password = Column(String, nullable=False)
     student_status = Column(String, nullable=False)
-    unit_id = Column(Integer, ForeignKey("academic_unit.unit_id"))
+    unit_id = Column(Integer, ForeignKey("academic_units.unit_id"))
 
     unit = relationship("UnitAkademik")
 
