@@ -1,7 +1,7 @@
 from nameko.rpc import rpc
 from database import SessionLocal
 
-from models import UnitAkademik, Dosen
+from models import UnitAkademik, Dosen, Mahasiswa
 
 class MasterService:
     name = "master_service"
@@ -165,6 +165,25 @@ class MasterService:
             db.close()
 
     @rpc
+    def get_lecturers_by_unit(self, unit_id):
+        db = SessionLocal()
+        try:
+            lecturers = db.query(Dosen).filter(Dosen.unit_id == unit_id).all()
+            return[
+                {
+                    "id": l.lecturer_id,
+                    "nip": l.nip,
+                    "name": l.lecturer_name,
+                    "email": l.lecturer_email,
+                    "status": l.lecturer_status,
+                    "unit_id": l.unit_id
+                }
+                for l in lecturers
+            ]
+        finally:
+            db.close()
+
+    @rpc
     def update_lecturer(self, lecturer_id, nip=None, name=None, email=None, password=None, status=None, unit_id=None):
         db = SessionLocal()
         try:
@@ -203,3 +222,129 @@ class MasterService:
             return {"status": "error", "message": "Gagal menghapus dosen. " +str(e)}
         finally:
             db.close()
+
+    # MAHASISWA
+    @rpc
+    def create_student(self, nrp, name, email, password, status, unit_id):
+        db = SessionLocal()
+        try:
+            student = Mahasiswa(
+                nrp=nrp,
+                student_name=name,
+                student_email=email,
+                student_password=password,
+                student_status=status,
+                unit_id=unit_id
+            )
+            db.add(student)
+            db.commit()
+            db.refresh(student)
+
+            return {"status": "success", "id": student.student_id, "name": student.student_name}
+        except Exception as e:
+            db.rollback()
+            return {"status": "error", "message": str(e)}
+        finally:
+            db.close()
+
+    @rpc
+    def get_all_students(self):
+        db = SessionLocal()
+        try:
+            students = db.query(students).all()
+            return [
+                {
+                    "id": s.student_id,
+                    "nrp": s.nrp,
+                    "name": s.student_name,
+                    "email": s.student_email,
+                    "password": s.student_status,
+                    "unit_id": s.unit_id
+                }
+                for s in students
+            ]
+        finally:
+            db.close()
+    
+    @rpc
+    def get_student_by_id(self, student_id):
+        db = SessionLocal()
+        try:
+            student = db.query(Mahasiswa).filter(Mahasiswa.student_id == student_id).first()
+            if not student:
+                return {"status": "error", "message": "Mahasiswa tidak ditemukan"}
+            
+            return {
+                "status": "success",
+                "data": {
+                    "id": student.student_id,
+                    "nrp": student.nrp,
+                    "name": student.student_name,
+                    "email": student.student_email,
+                    "status": student.student_status,
+                    "unit_id": student.unit_id
+                }
+            }
+        finally:
+            db.close()
+
+    @rpc
+    def get_students_by_unit(self, unit_id):
+        db = SessionLocal()
+        try:
+            students = db.query(Mahasiswa).filter(Mahasiswa.unit_id == unit_id).all()
+            return [
+                {
+                    "id": s.student_id,
+                    "nrp": s.nrp,
+                    "name": s.student_name,
+                    "email": s.student_email,
+                    "status": s.student_status,
+                    "unit_id": s.unit_id
+                }
+                for s in students
+            ]
+        finally:
+            db.close()
+    
+    @rpc
+    def update_student(self, student_id, nrp=None, name=None, email=None, password=None, status=None, unit_id=None):
+        db = SessionLocal()
+        try:
+            student = db.query(Mahasiswa).filter(Mahasiswa.student_id == student_id).first()
+            if not student:
+                return {"status": "error", "message": "Mahasiswa tidak ditemukan"}
+            
+            if nrp: student.nrp = nrp
+            if name: student.student_name = name
+            if email: student.student_email = email
+            if password: student.student_password = password
+            if status: student.student_status = status
+            if unit_id is not None: student.unit_id = unit_id
+
+            db.commit()
+            return {"status": "success", "message": "Data mahasiswa berhasil diupdate"}
+        except Exception as e:
+            db.rollback()
+            return {"status": "error", "message": str(e)}
+        finally:
+            db.close()
+
+    @rpc
+    def delete_student(self, student_id):
+        db = SessionLocal()
+        try:
+            student = db.query(Mahasiswa).filter(Mahasiswa.student_id == student_id).first()
+            if not student:
+                return {"status": "error", "message": "Mahasiswa tidak ditemukan"}
+            
+            db.delete(student)
+            db.commit()
+            return {"status": "success", "message": f"Mahasiswa {student.student_name} berhasil dihapus"}
+        except Exception as e:
+            db.rollback()
+            return {"status": "error", "message": "Gagal menghapus mahasiswa. " + str(e)}
+        finally:
+            db.close()
+
+    # 
