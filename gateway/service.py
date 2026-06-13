@@ -95,7 +95,7 @@ class GatewayService:
         result = self.master_service.delete_lecturer(lecturer_id)
         return Response(json.dumps(result), mimetype='application/json')
     
-    # ROLE
+    # ROLE ✅
     @http('POST', '/master/roles')
     def create_role(self, request):
         payload = json.loads(request.get_data(as_text=True))
@@ -121,7 +121,7 @@ class GatewayService:
         result = self.master_service.delete_role(role_id)
         return Response(json.dumps(result), mimetype='application/json')
     
-    # ASSIGN ROLE
+    # ASSIGN ROLE ✅
     @http('POST', '/master/lecturers/<int:lecturer_id>/roles')
     def assign_role_to_lecturer(self, request, lecturer_id):
         payload = json.loads(request.get_data(as_text=True))

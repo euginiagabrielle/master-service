@@ -265,13 +265,14 @@ class MasterService:
             if name: role.role_name = name
             
             db.commit()
-            return {"status": "success", "message": "Data dosen berhasil diupdate"}
+            return {"status": "success", "message": "Data role berhasil diupdate"}
         except Exception as e:
             db.rollback()
             return {"status": "error", "message": str(e)}
         finally:
             db.close()
     
+    @rpc
     def delete_role(self, role_id):
         db = SessionLocal()
         try:
@@ -585,6 +586,7 @@ class MasterService:
             db.close()
     
     # KURIKULUM
+    @rpc
     def create_curriculum(self, name, year, unit_id):
         db = SessionLocal()
         try:
@@ -620,6 +622,7 @@ class MasterService:
         finally:
             db.close()
 
+    @rpc
     def get_curriculums_by_unit(self, unit_id):
         db = SessionLocal()
         try:
@@ -795,7 +798,7 @@ class MasterService:
                     "id": d.curriculum_course_id,
                     "curriculum_id": d.curriculum_id,
                     "course_id": d.course_id,
-                    "course_name": d.course_name if d.course else None,
+                    "course_name": d.course.course_name if d.course else None,
                     "semester": d.semester
                 } for d in details
             ]
