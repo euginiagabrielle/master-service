@@ -141,7 +141,7 @@ class GatewayService:
         result = self.master_service.remove_role_from_lecturer(detail_role_id)
         return Response(json.dumps(result), mimetype='application/json')
 
-    # MAHASISWA
+    # MAHASISWA ✅
     @http('POST', '/master/students')
     def create_student(self, request):
         payload = json.loads(request.get_data(as_text=True))
@@ -189,7 +189,7 @@ class GatewayService:
         result = self.master_service.delete_student(student_id)
         return Response(json.dumps(result), mimetype='application/json')
     
-    # MATA KULIAH
+    # MATA KULIAH ✅
     @http('POST', '/master/courses')
     def create_course(self, request):
         payload = json.loads(request.get_data(as_text=True))
@@ -233,7 +233,7 @@ class GatewayService:
         result = self.master_service.delete_course(course_id)
         return Response(json.dumps(result), mimetype='application/json')
     
-    # KURIKULUM
+    # KURIKULUM ✅
     @http('POST', '/master/curriculums')
     def create_curriculums(self, request):
         payload = json.loads(request.get_data(as_text=True))

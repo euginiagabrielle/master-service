@@ -750,7 +750,7 @@ class MasterService:
             
             if name: semester.semester_name = name
             if year: semester.semester_year = year
-            if is_active: semester.is_active = is_active
+            if is_active is not None: semester.is_active = is_active
             if curriculum_id is not None: semester.curriculum_id = curriculum_id
 
             db.commit()
