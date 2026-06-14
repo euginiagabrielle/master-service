@@ -1,10 +1,51 @@
 from nameko.rpc import rpc
 from database import SessionLocal
 
+import os
+import jwt
+import datetime
+
 from models import UnitAkademik, Dosen, Mahasiswa, MataKuliah, Kurikulum, Semester, Role, DetailRole, MKKurikulum, PrasyaratMKKurikulum
 
 class MasterService:
     name = "master_service"
+
+    # LOGIN
+    @rpc
+    def login(self, username, password):
+        db = SessionLocal()
+        SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "fallback_secret")
+
+        try:
+            dosen = db.query(Dosen).filter((Dosen.nip == username) | (Dosen.lecturer_email == username)).first()
+            if dosen and dosen.lecturer_password == password:
+                roles = db.query(DetailRole).filter(DetailRole.lecturer_id == dosen.lecturer_id).all()
+                role_names = [r.role.role_name for r in roles] if roles else ["Dosen"]
+                payload = {
+                    "user_id": dosen.lecturer_id,
+                    "type": "dosen",
+                    "roles": role_names,
+                    "exp": datetime.datetime.now() + datetime.timedelta(hours=12)
+                }
+                token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+                return {"status": "success", "token": token, "type": "dosen", "roles": role_names}
+            
+            mhs = db.query(Mahasiswa).filter((Mahasiswa.nrp == username) | (Mahasiswa.student_email == username)).first()
+            if mhs and mhs.student_password == password:
+                payload = {
+                    "user_id": mhs.student_id,
+                    "type": "mahasiswa",
+                    "roles": ["Mahasiswa"],
+                    "exp": datetime.datetime.now() + datetime.timedelta(hours=12)
+                }
+                token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+                return {"status": "success", "token": token, "type": "mahasiswa", "roles": ["Mahasiswa"]}
+            
+            return {"status": "error", "message": "Username atau Password salah"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+        finally:
+            db.close()
 
     # UNIT AKADEMIK
     @rpc
