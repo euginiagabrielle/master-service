@@ -20,7 +20,7 @@ class GatewayService:
         )
         return Response(json.dumps(result), mimetype='application/json')
     
-    def check_jwt(request):
+    def check_jwt(self, request):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None, {"status": "error", "message": "Tiket tidak ditemukan! Silakan login."}
