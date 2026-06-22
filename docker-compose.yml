@@ -106,8 +106,8 @@ services:
       RABBIT_USER: guest
       RABBIT_PASS: guest
       DB_HOST: perwalian-db
-      DB_USER: perwalian_user
-      DB_PASS: perwalian_password
+      DB_USER: postgres
+      DB_PASS: password
       DB_NAME: perwalian_db
       NAMEKO_CONFIG: /app/config.yml
       JWT_SECRET_KEY: abl_soa_finalProject
