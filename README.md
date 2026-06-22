@@ -1,7 +1,7 @@
-# Master Service - SIAKAD System
+# Master Service - Sistem Informasi Akademik
 
 **Master Service** adalah core microservice dalam arsitektur Sistem Informasi Akademik (SIAKAD).
-Layanan ini berfungsi sebagai **Single Source of Truth (SSOT)** yang mengelola seluruh data induk untuk ekosistem layanan SIAKAD.
+Layanan ini berfungsi sebagai **Single Source of Truth (SSOT)** yang mengelola seluruh data induk untuk ekosistem layanan Sistem Informasi Akademik.
 
 ---
 
