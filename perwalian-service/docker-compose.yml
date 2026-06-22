@@ -1,0 +1,50 @@
+services:
+  perwalian-db:
+    container_name: ms-perwalian-db
+    image: postgres:15
+    environment:
+      POSTGRES_DB: perwalian_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - perwalian_pgdata:/var/lib/postgresql/data
+    networks:
+      - sia_net
+    restart: always
+
+  perwalian-service:
+    container_name: ms-perwalian-service
+    build: .
+    image: perwalian-service:1.0
+    depends_on:
+      - perwalian-db
+    volumes:
+      - .:/app
+    environment:
+      - NAMEKO_CONFIG=/app/config.yml
+    networks:
+      - sia_net
+    restart: always
+
+  perwalian-gateway:
+    container_name: ms-perwalian-gateway
+    build: ./gateway
+    ports:
+      - "8004:8000"
+    depends_on:
+      - perwalian-service
+    volumes:
+      - ./gateway:/app
+    networks:
+      - sia_net
+    restart: always
+
+volumes:
+  perwalian_pgdata:
+
+networks:
+  sia_net:
+    name: sia_network
+    external: true

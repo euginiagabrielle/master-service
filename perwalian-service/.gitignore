@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files (jangan push data test)
+*.log
+catatan.json
+*.dump
+*.sql.gz
+
+# Docker volumes (kalau ada)
+postgres-data/
+pgdata/
+
+# Environment variables (kalau pakai .env)
+.env
+.env.local
