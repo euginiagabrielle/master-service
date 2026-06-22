@@ -151,3 +151,51 @@ Authorization: Bearer <JWT_TOKEN>
 * Database menggunakan pendekatan **service-per-database**
 
 ---
+## Related Services (Microservices)
+
+Sistem SIAKAD ini dibangun menggunakan arsitektur **microservices**, di mana setiap layanan memiliki tanggung jawab spesifik dan berjalan secara independen.
+
+Berikut adalah repository untuk masing-masing service:
+
+* **Master Service (SSOT)**
+  [https://github.com/euginiagabrielle/master-service](https://github.com/euginiagabrielle/master-service)
+
+* **Penawaran Kelas Service**
+  [https://github.com/<username>/penawaran-kelas-service](https://github.com/RichardEfrem/penawaran_kelas_service.git)
+
+* **Perwalian Service**
+  [https://github.com/<username>/perwalian-service](https://github.com/ValentinoEzinkyJoelianto/perwalian-service.git)
+
+* **PRS Service**
+  [https://github.com/<username>/nilai-service](https://github.com/TimDarrel/PRS-Docker-Nameko.git)
+
+* **Transkrip Service**
+  [https://github.com/<username>/transkrip-service](https://github.com/mariovggithub/Transkrip_Service.git)
+
+* **API Gateway**
+  [https://github.com/<username>/gateway-service](https://github.com/euginiagabrielle/master-service)
+
+---
+
+## Arsitektur Sistem
+
+Setiap service:
+
+* Berjalan dalam container terpisah (Docker)
+* Memiliki database masing-masing (service-per-database)
+* Berkomunikasi menggunakan **Nameko RPC via RabbitMQ**
+* Diakses melalui **API Gateway**
+
+```text
+Client → API Gateway → RabbitMQ → Services → Database
+```
+
+---
+
+## Catatan Integrasi
+
+* Semua service dijalankan dalam satu environment menggunakan **Docker Compose**
+* Menggunakan **network yang sama** agar bisa saling berkomunikasi
+* Gateway berfungsi sebagai **single entry point**
+
+---
