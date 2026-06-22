@@ -57,10 +57,8 @@ services:
       - sia_net
     restart: always
 
-# volumes:
-#   pgdata:
-#     external: true
-#     name: master-service_pgdata
+volumes:
+  pgdata:
 
 networks:
   sia_net:
