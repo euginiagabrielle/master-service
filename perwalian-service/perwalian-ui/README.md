@@ -1,16 +1,105 @@
-# React + Vite
+# SIA Petra UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Unified frontend untuk SIA Petra (microservice-based academic information system). Mendukung 3 role: **Mahasiswa**, **Dosen**, dan **Admin/Kaprodi**.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 18** + **Vite 5**
+- **Tailwind CSS 3**
+- **Axios** (HTTP client dengan JWT interceptor)
+- **Vite Proxy** (bypass CORS, hit backend langsung)
 
-## React Compiler
+## Backend Requirements
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+UI ini connect ke 1 gateway yang merge 4 service:
+- Master Service (units, lecturers, students, courses, semesters)
+- Penawaran Kelas Service (ruang, kelas, jadwal)
+- Perwalian Service (dosen-wali, perwalian, catatan)
+- Transkrip Service (KRS, KHS, transkrip, IPS, IPK, nilai)
 
-## Expanding the ESLint configuration
+Gateway default running di `http://localhost:8003` (atau ganti di `vite.config.js`).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Setup
+
+```bash
+npm install
+npm run dev
+```
+
+Buka http://localhost:5173
+
+## Konfigurasi Backend URL
+
+Edit `vite.config.js`:
+
+```javascript
+// Lokal
+const BACKEND_URL = 'http://localhost:8003';
+
+// AWS EC2
+// const BACKEND_URL = 'http://13.220.219.2:8003';
+```
+
+## Role & Demo Credentials
+
+| Role | Username | Password | Dashboard |
+|---|---|---|---|
+| Admin/Kaprodi | `990001` | `password123` | AdminDashboard |
+| Dosen | `990002` | `password123` | DosenDashboard |
+| Mahasiswa | `C14230138` | `password123` | MahasiswaDashboard |
+
+## Struktur Folder
+
+```
+src/
+├── api/
+│   ├── client.js          # Axios base + JWT interceptor
+│   ├── master.js          # Master service endpoints
+│   ├── penawaran.js       # Penawaran kelas endpoints
+│   ├── perwalian.js       # Perwalian endpoints
+│   └── transkrip.js       # Transkrip & nilai endpoints
+├── components/
+│   ├── Layout.jsx         # Header + sidebar role-colored
+│   └── PageHeader.jsx
+├── pages/
+│   ├── Login.jsx
+│   ├── MahasiswaDashboard.jsx
+│   ├── DosenDashboard.jsx
+│   └── AdminDashboard.jsx
+├── App.jsx                # Role routing
+└── main.jsx
+```
+
+## Fitur per Role
+
+### Mahasiswa
+- Profile akun
+- Lihat dosen wali
+- Lihat KRS, KHS, Transkrip
+- Lihat IPS & IPK
+- Lihat kelas tersedia semester aktif
+
+### Dosen
+- Lihat mahasiswa wali
+- Assign mahasiswa wali baru
+- Buat & validasi perwalian (PRS)
+- CRUD catatan bimbingan
+- Input nilai per kelas (UTS/UAS/Tugas)
+
+### Admin/Kaprodi
+- CRUD Unit Akademik (Fakultas, Prodi)
+- CRUD Dosen
+- CRUD Mahasiswa
+- CRUD Mata Kuliah
+- CRUD Semester
+- CRUD Ruang
+- CRUD Kelas
+- Monitoring Perwalian
+- Push Semester ke KRS
+
+## Catatan
+
+- Auth: pakai JWT dari `POST /login`, di-store di localStorage
+- CORS: bypass via Vite proxy (semua request ke `/api/*`)
+- 401 response → auto-logout
+- Backend tidak diutak-atik, UI adaptive terhadap response format
