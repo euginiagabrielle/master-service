@@ -157,22 +157,26 @@ services:
   # PRS
   prs-db:
     container_name: ms-prs-db
-    image: postgres:15
+    image: mysql:8.0
     environment:
-      POSTGRES_DB: prs_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: prs_db
+      MYSQL_USER: prs_user
+      MYSQL_PASSWORD: prs_password
     ports:
-      - "5435:5432"
+      - "3308:3306"
     volumes:
-      - prs_pgdata:/var/lib/postgresql/data
+      - prs_mysql_data:/var/lib/mysql
+      - ./prs-service/prs_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - sia_net
     restart: always
 
   prs-service:
     container_name: ms-prs-service
-    build: ./PRS-Docker-Nameko
+    build:
+      context: ./prs-service/prs_service
+      dockerfile: Dockerfile
     depends_on:
       - rabbitmq
       - prs-db
@@ -181,12 +185,11 @@ services:
       RABBIT_USER: guest
       RABBIT_PASS: guest
       DB_HOST: prs-db
-      DB_USER: postgres
-      DB_PASS: password
-      DB_NAME: penawaran_db
-      NAMEKO_CONFIG: /app/config.yml
-      JWT_SECRET_KEY: abl_soa_finalProject
-    command: sh -c "sleep 15 && python create_tables.py && nameko run --config config.yaml prs.service"
+      DB_PORT: 3306
+      DB_NAME: prs_db
+      DB_USER: prs_user
+      DB_PASSWORD: prs_password
+    command: sh -c "sleep 15 && nameko run --config config.yml service"
     networks:
       - sia_net
     restart: always
