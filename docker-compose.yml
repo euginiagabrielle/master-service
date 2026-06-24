@@ -167,7 +167,7 @@ services:
       - "3308:3306"
     volumes:
       - prs_mysql_data:/var/lib/mysql
-      - ./prs-service/prs_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./PRS-Docker-Nameko/prs_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - sia_net
     restart: always
@@ -175,7 +175,7 @@ services:
   prs-service:
     container_name: ms-prs-service
     build:
-      context: ./prs-service/prs_service
+      context: ./PRS-Docker-Nameko/prs_service
       dockerfile: Dockerfile
     depends_on:
       - rabbitmq
