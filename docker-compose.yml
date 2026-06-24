@@ -221,7 +221,7 @@ volumes:
   penawaran_pgdata:
   perwalian_pgdata:
   transkrip_data:
-  prs_pgdata:
+  prs_mysql_data:
 
 networks:
   sia_net:
