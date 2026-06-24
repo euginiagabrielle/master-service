@@ -153,6 +153,43 @@ services:
     networks:
       - sia_net
     restart: always
+
+  # PRS
+  prs-db:
+    container_name: ms-prs-db
+    image: postgres:15
+    environment:
+      POSTGRES_DB: prs_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+    volumes:
+      - prs_pgdata:/var/lib/postgresql/data
+    networks:
+      - sia_net
+    restart: always
+
+  prs-service:
+    container_name: ms-prs-service
+    build: ./PRS-Docker-Nameko
+    depends_on:
+      - rabbitmq
+      - prs-db
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_USER: guest
+      RABBIT_PASS: guest
+      DB_HOST: prs-db
+      DB_USER: postgres
+      DB_PASS: password
+      DB_NAME: penawaran_db
+      NAMEKO_CONFIG: /app/config.yml
+      JWT_SECRET_KEY: abl_soa_finalProject
+    command: sh -c "sleep 15 && python create_tables.py && nameko run --config config.yaml prs.service"
+    networks:
+      - sia_net
+    restart: always
   
   gateway:
     container_name: ms-gateway
@@ -165,6 +202,7 @@ services:
       - penawaran-service
       - perwalian-service
       - transkrip-service
+      - prs-service
     volumes:
       - ./gateway:/app
     environment:
@@ -180,6 +218,7 @@ volumes:
   penawaran_pgdata:
   perwalian_pgdata:
   transkrip_data:
+  prs_pgdata:
 
 networks:
   sia_net:
