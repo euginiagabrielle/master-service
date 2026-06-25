@@ -147,7 +147,7 @@ class PRSService:
                 id_detail = cur.lastrowid
 
                 # --- GET kuota from Kelas ---
-                kelas_info = self.penawaran_kelas.get_kelas(kelas_id=id_kelas)
+                kelas_info = self.penawaran_kelas_rpc.get_kelas(kelas_id=id_kelas)
                 if "error" in kelas_info:
                     db.rollback()
                     return {"error": kelas_info["error"]}
@@ -155,12 +155,12 @@ class PRSService:
 
                 # --- GET jadwal kuliah only ---
                 cur.execute(
-                    "SELECT id_jadwal FROM prs_detail_jadwal WHERE id_detail_prs = %s",
+                    "SELECT id_jadwal FROM jadwal_ss WHERE id_detail_prs = %s",
                     (id_detail,),
                 )
                 existing_jadwal_ids = {r["id_jadwal"] for r in cur.fetchall()}
 
-                jadwal_raw = self.penawaran_kelas.get_jadwal(kelas_id=id_kelas)
+                jadwal_raw = self.penawaran_kelas_rpc.get_jadwal(kelas_id=id_kelas)
                 jadwal_list = []
                 for j in jadwal_raw:
                     if j["tipe"] != "kuliah" or j["is_outdated"]:
@@ -170,7 +170,7 @@ class PRSService:
 
                     ruangan = "TBD"
                     if j.get("ruang_id"):
-                        ruang_info = self.penawaran_kelas.get_ruang(ruang_id=j["ruang_id"])
+                        ruang_info = self.penawaran_kelas_rpc.get_ruang(ruang_id=j["ruang_id"])
                         if "error" not in ruang_info:
                             ruangan = ruang_info.get("nama_ruang") or ruang_info.get("kode_ruang", "TBD")
 

@@ -125,18 +125,12 @@ INSERT INTO kelas_config (id_kelas, kapasitas) VALUES
 -- Semester 1 — already validated, used as baseline
 -- ----------------------------------------------------------
 INSERT INTO prs (id_mahasiswa, id_semester, dosen_wali_id, status, total_sks) VALUES
-(1, 1, 10, 'validated', 18),
 (2, 1, 10, 'validated', 15),
 (3, 1, 11, 'validated', 18);
 
 INSERT INTO prs_detail (id_prs, id_kelas, id_mata_kuliah, prioritas, sks, status_validasi) VALUES
 -- mhs 1
-(1, 101, 1, 1, 3, 'approved'),
-(1, 102, 2, 1, 3, 'approved'),
-(1, 103, 3, 1, 3, 'approved'),
-(1, 104, 4, 1, 3, 'approved'),
-(1, 105, 5, 1, 3, 'approved'),
-(1, 106, 6, 1, 3, 'approved'),
+
 -- mhs 2
 (2, 107, 1, 1, 3, 'approved'),
 (2, 108, 2, 1, 3, 'approved'),
