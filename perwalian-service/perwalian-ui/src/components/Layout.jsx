@@ -3,20 +3,12 @@ import { useState } from 'react';
 export default function Layout({ user, onLogout, tabs, activeTab, onTabChange, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const roleColors = {
-    mahasiswa: 'bg-blue-600',
-    dosen: 'bg-emerald-600',
-    admin: 'bg-purple-600',
-    kaprodi: 'bg-purple-600',
-  };
-
   const roleLabel = user?.roles?.[0] || user?.type || 'User';
-  const headerColor = user?.type === 'mahasiswa' ? roleColors.mahasiswa :
-                       user?.roles?.includes('Admin') || user?.roles?.includes('Kaprodi') ? roleColors.admin :
-                       roleColors.dosen;
+  // Tema biru terpadu (mengikuti desain Penawaran Kelas service)
+  const headerColor = 'bg-blue-700';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-100">
       {/* Header */}
       <header className={`${headerColor} text-white shadow`}>
         <div className="max-w-screen-2xl mx-auto px-6 py-4 flex justify-between items-center">

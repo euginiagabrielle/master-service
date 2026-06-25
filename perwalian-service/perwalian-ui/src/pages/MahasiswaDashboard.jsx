@@ -188,7 +188,7 @@ export default function MahasiswaDashboard({ user, onLogout }) {
       {activeTab === 'profile' && (
         <div>
           <PageHeader title="Profile Saya" description="Informasi akun mahasiswa" />
-          <div className="bg-white rounded-lg shadow p-6 max-w-xl">
+          <div className="bg-white rounded-xl shadow-sm p-6 max-w-xl">
             {profile ? (
               <dl className="space-y-3">
                 <div className="flex justify-between border-b pb-2">
@@ -230,7 +230,7 @@ export default function MahasiswaDashboard({ user, onLogout }) {
       {activeTab === 'perwalian' && (
         <div>
           <PageHeader title="Dosen Wali Saya" description="Informasi dosen pembimbing akademik" />
-          <div className="bg-white rounded-lg shadow p-6 max-w-xl">
+          <div className="bg-white rounded-xl shadow-sm p-6 max-w-xl">
             {dosenWali?.status === 'success' && dosenWali.data ? (
               <dl className="space-y-3">
                 <div className="flex justify-between border-b pb-2"><dt className="font-medium text-gray-700">Dosen Wali ID</dt><dd className="font-mono">#{dosenWali.data.dosen_wali_id}</dd></div>
@@ -252,7 +252,7 @@ export default function MahasiswaDashboard({ user, onLogout }) {
         <div>
           <PageHeader title="PRS Saya" description="Perubahan Rencana Studi - Pilih mata kuliah untuk semester ini" />
 
-          <div className="bg-white rounded-lg shadow p-6 mb-4 max-w-xl">
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-4 max-w-xl">
             <label className="block text-sm font-medium mb-1">Semester</label>
             <select value={prsSemId} onChange={(e) => setPrsSemId(e.target.value)} className="w-full px-3 py-2 border rounded">
               <option value="">-- Pilih Semester --</option>
@@ -274,23 +274,23 @@ export default function MahasiswaDashboard({ user, onLogout }) {
             </div>
           ) : (
             <>
-              <div className="bg-white rounded-lg shadow p-6 mb-4">
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
                 <h3 className="font-semibold text-lg">PRS #{prsData.id_prs || prsData.prs?.id_prs}</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Status:{' '}
                   <span className={`px-2 py-0.5 rounded text-xs ${
-                    prsData.status === 'verified' ? 'bg-green-100 text-green-700' :
+                    prsData.status === 'validated' ? 'bg-green-100 text-green-700' :
                     prsData.status === 'rejected' ? 'bg-red-100 text-red-700' :
                     'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {prsData.status || 'pending'}
+                    {prsData.status || 'draft'}
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">Total SKS: {prsDetail.reduce((sum, d) => sum + (d.sks || 0), 0)}</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="font-semibold mb-4">Tambah Mata Kuliah</h3>
                   <form onSubmit={handleAddDetail} className="space-y-3">
                     <div>
@@ -312,7 +312,7 @@ export default function MahasiswaDashboard({ user, onLogout }) {
                         <option value="">-- Pilih Kelas --</option>
                         {kelasTersedia.map(k => (
                           <option key={k.id || k.kelas_id} value={k.id || k.kelas_id}>
-                            #{k.id || k.kelas_id} - {k.course_name || k.nama_matkul || `Course #${k.course_id}`}
+                            {k.kode_kelas || `#${k.kelas_id}`} - Course #{k.course_id} (sisa {k.sisa ?? '-'})
                           </option>
                         ))}
                       </select>
@@ -341,11 +341,11 @@ export default function MahasiswaDashboard({ user, onLogout }) {
                   </form>
                 </div>
 
-                <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
                   <h3 className="font-semibold mb-4">Mata Kuliah Diambil ({prsDetail.length})</h3>
                   {prsDetail.length > 0 ? (
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-100">
+                      <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                         <tr>
                           <th className="px-3 py-2 text-left">ID</th>
                           <th className="px-3 py-2 text-left">Kelas</th>
@@ -365,11 +365,11 @@ export default function MahasiswaDashboard({ user, onLogout }) {
                             <td className="px-3 py-2">{d.prioritas || '-'}</td>
                             <td className="px-3 py-2">
                               <span className={`px-2 py-0.5 rounded text-xs ${
-                                d.status === 'approved' ? 'bg-green-100 text-green-700' :
-                                d.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                (d.status_validasi || d.status) === 'approved' ? 'bg-green-100 text-green-700' :
+                                (d.status_validasi || d.status) === 'rejected' ? 'bg-red-100 text-red-700' :
                                 'bg-yellow-100 text-yellow-700'
                               }`}>
-                                {d.status || 'pending'}
+                                {d.status_validasi || d.status || 'pending'}
                               </span>
                             </td>
                           </tr>
@@ -389,10 +389,10 @@ export default function MahasiswaDashboard({ user, onLogout }) {
       {activeTab === 'krs' && (
         <div>
           <PageHeader title="Kartu Rencana Studi" description="Mata kuliah yang diambil per semester" />
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-xl shadow-sm p-6">
             {krs && Array.isArray(krs) && krs.length > 0 ? (
               <table className="w-full text-sm">
-                <thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Semester</th><th className="px-3 py-2 text-left">Tahun</th><th className="px-3 py-2 text-left">Status</th></tr></thead>
+                <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><tr><th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Semester</th><th className="px-3 py-2 text-left">Tahun</th><th className="px-3 py-2 text-left">Status</th></tr></thead>
                 <tbody>
                   {krs.map(item => (
                     <tr key={item.id_krs || item.id} className="border-b">
@@ -412,7 +412,7 @@ export default function MahasiswaDashboard({ user, onLogout }) {
       {activeTab === 'khs' && (
         <div>
           <PageHeader title="Kartu Hasil Studi" description="Nilai per semester" />
-          <div className="bg-white rounded-lg shadow p-6 mb-4 max-w-xl">
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-4 max-w-xl">
             <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
                 <label className="block text-sm font-medium mb-1">Tahun Ajaran</label>
@@ -430,13 +430,19 @@ export default function MahasiswaDashboard({ user, onLogout }) {
             <button onClick={loadKhs} className="w-full bg-blue-600 text-white py-2 rounded">Tampilkan KHS</button>
           </div>
           {khs && (
-            <div className="bg-white rounded-lg shadow p-6">
-              {Array.isArray(khs) && khs.length > 0 ? (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">ID KHS</th><th className="px-3 py-2 text-left">Semester</th><th className="px-3 py-2 text-left">Tahun</th></tr></thead>
-                  <tbody>{khs.map(item => (<tr key={item.id_khs} className="border-b"><td className="px-3 py-2 font-mono">{item.id_khs}</td><td className="px-3 py-2">{item.semester}</td><td className="px-3 py-2">{item.tahun_ajaran}</td></tr>))}</tbody>
-                </table>
-              ) : <p className="text-gray-500">Tidak ada data KHS</p>}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              {Array.isArray(khs.matkul) && khs.matkul.length > 0 ? (
+                <>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-sm text-gray-600">{khs.semester} {khs.tahun_ajaran}</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">IPS: {Number(khs.ips || 0).toFixed(2)}</span>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><tr><th className="px-3 py-2 text-left">Matkul</th><th className="px-3 py-2 text-left">SKS</th><th className="px-3 py-2 text-left">UTS</th><th className="px-3 py-2 text-left">UAS</th><th className="px-3 py-2 text-left">Akhir</th><th className="px-3 py-2 text-left">Huruf</th></tr></thead>
+                    <tbody>{khs.matkul.map(m => (<tr key={m.id_nilai} className="border-b"><td className="px-3 py-2">{m.nama_matkul || `#${m.id_matkul}`}</td><td className="px-3 py-2">{m.sks}</td><td className="px-3 py-2">{m.nilai_uts ?? '-'}</td><td className="px-3 py-2">{m.nilai_uas ?? '-'}</td><td className="px-3 py-2 font-medium">{m.nilai_akhir ?? '-'}</td><td className="px-3 py-2 font-medium">{m.nilai_huruf ?? '-'}</td></tr>))}</tbody>
+                  </table>
+                </>
+              ) : <p className="text-gray-500">Tidak ada data KHS untuk semester ini</p>}
             </div>
           )}
         </div>
@@ -446,25 +452,33 @@ export default function MahasiswaDashboard({ user, onLogout }) {
         <div>
           <PageHeader title="Transkrip Akademik" description="Rekap nilai keseluruhan" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow p-6">
+            <div className="bg-gradient-to-br from-blue-700 to-blue-500 text-white rounded-xl shadow-sm p-6">
               <p className="text-sm opacity-80">IPK</p>
               <p className="text-4xl font-bold mt-2">{ipk?.ipk?.toFixed?.(2) || ipk?.ipk || '-'}</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg shadow p-6">
+            <div className="bg-gradient-to-br from-sky-600 to-sky-400 text-white rounded-xl shadow-sm p-6">
               <p className="text-sm opacity-80">IPS Terakhir</p>
-              <p className="text-4xl font-bold mt-2">{ips?.ips?.toFixed?.(2) || ips?.ips || '-'}</p>
+              <p className="text-4xl font-bold mt-2">{Array.isArray(ips) && ips.length ? Number(ips[ips.length - 1].ips).toFixed(2) : '-'}</p>
             </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow p-6">
+            <div className="bg-gradient-to-br from-indigo-600 to-indigo-400 text-white rounded-xl shadow-sm p-6">
               <p className="text-sm opacity-80">Total SKS</p>
               <p className="text-4xl font-bold mt-2">{transkrip?.total_sks || '-'}</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="font-semibold mb-3">Detail Transkrip</h3>
-            {transkrip && Array.isArray(transkrip.detail) && transkrip.detail.length > 0 ? (
+            {transkrip && Array.isArray(transkrip.riwayat) && transkrip.riwayat.length > 0 ? (
               <table className="w-full text-sm">
-                <thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">Mata Kuliah</th><th className="px-3 py-2 text-left">SKS</th><th className="px-3 py-2 text-left">Huruf</th><th className="px-3 py-2 text-left">Akhir</th></tr></thead>
-                <tbody>{transkrip.detail.map((item, idx) => (<tr key={idx} className="border-b"><td className="px-3 py-2">{item.nama_matkul || `Matkul #${item.id_matkul}`}</td><td className="px-3 py-2">{item.sks}</td><td className="px-3 py-2 font-medium">{item.nilai_huruf}</td><td className="px-3 py-2">{item.nilai_akhir}</td></tr>))}</tbody>
+                <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><tr><th className="px-3 py-2 text-left">Semester</th><th className="px-3 py-2 text-left">Mata Kuliah</th><th className="px-3 py-2 text-left">SKS</th><th className="px-3 py-2 text-left">Huruf</th><th className="px-3 py-2 text-left">Akhir</th></tr></thead>
+                <tbody>{transkrip.riwayat.flatMap((sem, si) => (sem.matkul || []).map((item, idx) => (
+                  <tr key={`${si}-${idx}`} className="border-b">
+                    <td className="px-3 py-2 text-gray-600">{sem.semester} {sem.tahun_ajaran}</td>
+                    <td className="px-3 py-2">{item.nama_matkul || `Matkul #${item.id_matkul}`}</td>
+                    <td className="px-3 py-2">{item.sks}</td>
+                    <td className="px-3 py-2 font-medium">{item.nilai_huruf}</td>
+                    <td className="px-3 py-2">{item.nilai_akhir}</td>
+                  </tr>
+                )))}</tbody>
               </table>
             ) : <p className="text-gray-500">Belum ada data transkrip</p>}
           </div>
@@ -474,18 +488,18 @@ export default function MahasiswaDashboard({ user, onLogout }) {
       {activeTab === 'kelas' && (
         <div>
           <PageHeader title="Kelas Tersedia" description="Pilihan mata kuliah semester aktif" />
-          <div className="bg-white rounded-lg shadow p-6 mb-4 max-w-xl">
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-4 max-w-xl">
             <label className="block text-sm font-medium mb-1">Semester</label>
             <select value={activeSemId} onChange={(e) => setActiveSemId(e.target.value)} className="w-full px-3 py-2 border rounded">
               <option value="">-- Pilih Semester --</option>
               {semesters.map(s => (<option key={s.id} value={s.id}>{s.is_active ? '🟢 ' : ''}{s.name} {s.year}</option>))}
             </select>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-xl shadow-sm p-6">
             {kelasTersedia.length > 0 ? (
               <table className="w-full text-sm">
-                <thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">Kelas</th><th className="px-3 py-2 text-left">Mata Kuliah</th><th className="px-3 py-2 text-left">SKS</th><th className="px-3 py-2 text-left">Kapasitas</th></tr></thead>
-                <tbody>{kelasTersedia.map(k => (<tr key={k.id || k.kelas_id} className="border-b"><td className="px-3 py-2 font-mono">#{k.id || k.kelas_id}</td><td className="px-3 py-2">{k.course_name || k.nama_matkul || `Course #${k.course_id}`}</td><td className="px-3 py-2">{k.sks || '-'}</td><td className="px-3 py-2">{k.kapasitas || '-'}</td></tr>))}</tbody>
+                <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><tr><th className="px-3 py-2 text-left">Kode Kelas</th><th className="px-3 py-2 text-left">Mata Kuliah</th><th className="px-3 py-2 text-left">Kuota</th><th className="px-3 py-2 text-left">Sisa</th></tr></thead>
+                <tbody>{kelasTersedia.map(k => (<tr key={k.id || k.kelas_id} className="border-b"><td className="px-3 py-2 font-mono">{k.kode_kelas || `#${k.kelas_id}`}</td><td className="px-3 py-2">Course #{k.course_id}</td><td className="px-3 py-2">{k.kuota ?? '-'}</td><td className="px-3 py-2">{k.sisa ?? '-'}</td></tr>))}</tbody>
               </table>
             ) : <p className="text-gray-500">Tidak ada kelas tersedia</p>}
           </div>

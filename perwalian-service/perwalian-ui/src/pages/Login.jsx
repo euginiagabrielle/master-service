@@ -48,7 +48,7 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-800 via-blue-700 to-blue-500 flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">SIA Petra</h1>
@@ -90,7 +90,7 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2.5 rounded-lg font-medium transition disabled:from-gray-400 disabled:to-gray-500"
+            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2.5 rounded-lg font-medium transition disabled:bg-gray-400"
           >
             {loading ? 'Memproses...' : 'Login'}
           </button>
