@@ -45,8 +45,12 @@ class GatewayService:
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None, {"status": "error", "message": "Tiket tidak ditemukan! Silakan login."}
-        
-        token = auth_header.split(" ")[1]
+
+        # Terima "Bearer <token>" maupun token telanjang; jangan crash kalau malformed
+        parts = auth_header.split(" ", 1)
+        token = parts[1].strip() if len(parts) > 1 else parts[0].strip()
+        if not token:
+            return None, {"status": "error", "message": "Tiket tidak ditemukan! Silakan login."}
         try:
             SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "fallback_secret")
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
@@ -1093,6 +1097,30 @@ class GatewayService:
             return Response(json.dumps(err), status=401, mimetype='application/json')
 
         result = self.transkrip_rpc.get_nilai_by_kelas(id_kelas)
+        return Response(json.dumps(result), status=200, mimetype="application/json")
+
+    @http("GET", "/nilai/kelas/kode/<string:kode_kelas>")
+    def get_nilai_by_kode_kelas(self, request, kode_kelas):
+        """
+        Ambil semua nilai mahasiswa dalam satu kelas berdasarkan KODE kelas.
+        Gateway resolve kode_kelas -> kelas_id via Penawaran, lalu ke Transkrip.
+        """
+        jwt_payload, err = self.check_jwt(request)
+        if err:
+            return Response(json.dumps(err), status=401, mimetype='application/json')
+
+        kelas_list = self.penawaran_kelas.list_kelas()
+        match = next(
+            (k for k in kelas_list if str(k.get("kode_kelas", "")).lower() == kode_kelas.lower()),
+            None,
+        )
+        if not match:
+            return Response(
+                json.dumps({"status": "error", "message": f"Kelas '{kode_kelas}' tidak ditemukan"}),
+                status=404, mimetype="application/json",
+            )
+
+        result = self.transkrip_rpc.get_nilai_by_kelas(match["kelas_id"])
         return Response(json.dumps(result), status=200, mimetype="application/json")
 
     @http("GET", "/khs/<int:id_mahasiswa>")

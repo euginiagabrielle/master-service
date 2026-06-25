@@ -369,12 +369,18 @@ export default function DosenDashboard({ user, onLogout }) {
     } catch (e) { alert('Error: ' + e.message); }
   };
 
+  // idKelas menyimpan KODE kelas (mis. "IF301-A"); cari nilai by kode via gateway
   const handleLoadNilai = async () => {
     if (!idKelas) return;
     try {
-      const data = await transkripApi.getNilaiByKelas(idKelas);
-      setNilaiKelas(Array.isArray(data) ? data : []);
-    } catch (e) { alert('Error: ' + e.message); }
+      const data = await transkripApi.getNilaiByKodeKelas(idKelas);
+      if (Array.isArray(data)) {
+        setNilaiKelas(data);
+      } else {
+        setNilaiKelas([]);
+        alert(data?.message || 'Kelas tidak ditemukan');
+      }
+    } catch (e) { alert('Error: ' + (e.response?.data?.message || e.message)); }
   };
 
   const handleInputNilai = async (e) => {
@@ -705,8 +711,11 @@ export default function DosenDashboard({ user, onLogout }) {
               <h3 className="font-semibold mb-4">Cari Nilai per Kelas</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">ID Kelas</label>
-                  <input type="number" value={idKelas} onChange={(e) => setIdKelas(e.target.value)} className="w-full px-3 py-2 border rounded" />
+                  <label className="block text-sm font-medium mb-1">Kelas (kode)</label>
+                  <select value={idKelas} onChange={(e) => setIdKelas(e.target.value)} className="w-full px-3 py-2 border rounded">
+                    <option value="">-- Pilih Kelas --</option>
+                    {kelas.map(k => <option key={k.kelas_id || k.id} value={k.kode_kelas}>{k.kode_kelas} — {getCourseName(k.course_id)}</option>)}
+                  </select>
                 </div>
                 <button onClick={handleLoadNilai} className="w-full bg-blue-700 text-white py-2 rounded">Tampilkan</button>
               </div>
@@ -731,13 +740,13 @@ export default function DosenDashboard({ user, onLogout }) {
               </form>
             </div>
             <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
-              <h3 className="font-semibold mb-4">Nilai Kelas {idKelas && `#${idKelas}`}</h3>
+              <h3 className="font-semibold mb-4">Nilai Kelas {idKelas && `(${idKelas})`}</h3>
               {nilaiKelas.length > 0 ? (
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><tr><th className="px-3 py-2 text-left">ID Nilai</th><th className="px-3 py-2 text-left">Matkul</th><th className="px-3 py-2 text-left">UTS</th><th className="px-3 py-2 text-left">UAS</th><th className="px-3 py-2 text-left">Tes1</th><th className="px-3 py-2 text-left">Tes2</th><th className="px-3 py-2 text-left">Akhir</th><th className="px-3 py-2 text-left">Huruf</th></tr></thead>
                   <tbody>{nilaiKelas.map(n => (<tr key={n.id_nilai} className="border-b"><td className="px-3 py-2 font-mono">{n.id_nilai}</td><td className="px-3 py-2">{n.nama_matkul || `#${n.id_matkul}`}</td><td className="px-3 py-2">{n.nilai_uts ?? '-'}</td><td className="px-3 py-2">{n.nilai_uas ?? '-'}</td><td className="px-3 py-2">{n.nilai_tes1 ?? '-'}</td><td className="px-3 py-2">{n.nilai_tes2 ?? '-'}</td><td className="px-3 py-2 font-medium">{n.nilai_akhir ?? '-'}</td><td className="px-3 py-2 font-medium">{n.nilai_huruf ?? '-'}</td></tr>))}</tbody>
                 </table>
-              ) : <p className="text-gray-500">Pilih ID Kelas</p>}
+              ) : <p className="text-gray-500">Pilih kelas dulu</p>}
             </div>
           </div>
         </div>
@@ -1232,18 +1241,21 @@ export default function DosenDashboard({ user, onLogout }) {
           <div className="bg-white rounded-xl shadow-sm p-6">
             {jumlahPerKelas.length > 0 ? (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><tr><th className="px-3 py-2 text-left">ID Kelas</th><th className="px-3 py-2 text-left">Matkul</th><th className="px-3 py-2 text-left">Kap</th><th className="px-3 py-2 text-left">Peminat</th><th className="px-3 py-2 text-left">Utilization</th></tr></thead>
+                <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><tr><th className="px-3 py-2 text-left">Kode Kelas</th><th className="px-3 py-2 text-left">Matkul</th><th className="px-3 py-2 text-left">Kuota</th><th className="px-3 py-2 text-left">Peminat</th><th className="px-3 py-2 text-left">Utilization</th></tr></thead>
                 <tbody>{jumlahPerKelas.map(stat => {
-                  const kap = stat.kapasitas || 0;
-                  const jml = stat.jumlah_peminat || stat.count || stat.jumlah || 0;
-                  const pct = kap > 0 ? Math.round((jml / kap) * 100) : 0;
+                  const k = kelas.find(kk => (kk.kelas_id || kk.id) === stat.id_kelas);
+                  const kode = k?.kode_kelas || `#${stat.id_kelas}`;
+                  const matkul = k ? getCourseName(k.course_id) : `Kelas #${stat.id_kelas}`;
+                  const kuota = k?.kuota ?? 0;
+                  const jml = stat.jumlah_mahasiswa ?? 0;     // PRS returns jumlah_mahasiswa
+                  const pct = kuota > 0 ? Math.round((jml / kuota) * 100) : 0;
                   return (
                     <tr key={stat.id_kelas} className="border-b">
-                      <td className="px-3 py-2 font-mono">#{stat.id_kelas}</td>
-                      <td className="px-3 py-2">{stat.nama_matkul || `Course #${stat.course_id || '?'}`}</td>
-                      <td className="px-3 py-2">{kap}</td>
+                      <td className="px-3 py-2 font-mono">{kode}</td>
+                      <td className="px-3 py-2">{matkul}</td>
+                      <td className="px-3 py-2">{kuota || '-'}</td>
                       <td className="px-3 py-2 font-medium">{jml}</td>
-                      <td className="px-3 py-2"><div className="flex items-center gap-2"><div className="flex-1 bg-gray-200 rounded h-2 max-w-xs"><div className={`h-2 rounded ${pct > 100 ? 'bg-red-500' : pct > 80 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(pct, 100)}%` }}></div></div><span className="text-xs">{pct}%</span></div></td>
+                      <td className="px-3 py-2"><div className="flex items-center gap-2"><div className="flex-1 bg-gray-200 rounded h-2 max-w-xs"><div className={`h-2 rounded ${pct > 100 ? 'bg-red-500' : pct > 80 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${Math.min(pct, 100)}%` }}></div></div><span className="text-xs">{kuota > 0 ? `${pct}%` : '—'}</span></div></td>
                     </tr>
                   );
                 })}</tbody>

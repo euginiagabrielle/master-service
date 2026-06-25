@@ -16,6 +16,7 @@ export const getIpk = (idMahasiswa) => api.get(`/ipk/${idMahasiswa}`).then(r => 
 
 // ===== NILAI =====
 export const getNilaiByKelas = (idKelas) => api.get(`/nilai/kelas/${idKelas}`).then(r => r.data);
+export const getNilaiByKodeKelas = (kodeKelas) => api.get(`/nilai/kelas/kode/${encodeURIComponent(kodeKelas)}`).then(r => r.data);
 export const inputNilai = (data) => api.post('/input_nilai', data).then(r => r.data);
 
 // ===== ADMIN ACTION =====
