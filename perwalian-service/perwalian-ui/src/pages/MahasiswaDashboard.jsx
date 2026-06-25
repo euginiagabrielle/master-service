@@ -286,7 +286,10 @@ export default function MahasiswaDashboard({ user, onLogout }) {
                     {prsData.status || 'draft'}
                   </span>
                 </p>
-                <p className="text-sm text-gray-600">Total SKS: {prsDetail.reduce((sum, d) => sum + (d.sks || 0), 0)}</p>
+                <p className="text-sm text-gray-600"> Total SKS: {prsDetail
+                    .filter(d => d.prioritas === 1 || d.status_validasi === 'approved')
+                    .reduce((sum, d) => sum + (d.sks || 0), 0)}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">

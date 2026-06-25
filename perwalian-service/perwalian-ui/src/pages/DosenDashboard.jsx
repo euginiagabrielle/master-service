@@ -678,7 +678,10 @@ export default function DosenDashboard({ user, onLogout }) {
               <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
                 <h3 className="font-semibold text-lg">PRS</h3>
                 <p className="text-sm text-gray-600 mt-1">Status: <span className={`px-2 py-0.5 rounded text-xs ${prsResult.status === 'validated' ? 'bg-green-100 text-green-700' : prsResult.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{prsResult.status || 'draft'}</span></p>
-                <p className="text-sm text-gray-600">Total SKS: {prsDetailItems.reduce((sum, d) => sum + (d.sks || 0), 0)}</p>
+                <p className="text-sm text-gray-600"> Total SKS: {prsDetailItems
+                  .filter(d => d.prioritas === 1 || d.status_validasi === 'approved')
+                  .reduce((sum, d) => sum + (d.sks || 0), 0)}
+                </p>
               </div>
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h3 className="font-semibold mb-4">Mata Kuliah ({prsDetailItems.length})</h3>
