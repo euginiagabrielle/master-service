@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Backend URL - ganti sesuai dengan BitVise SSHnya.
-// Untuk Docker lokal: http://localhost:8003
-// Untuk AWS EC2:      http://13.220.219.2:8003
+// Backend URL - ganti sesuai environment yang dipakai.
+// Docker lokal (aktif): http://localhost:8003  (gateway map 8003:8000 di docker-compose.yml)
+// AWS EC2:              http://44.201.72.181:8003
 const BACKEND_URL = 'http://44.201.72.181:8003';
 
 export default defineConfig({

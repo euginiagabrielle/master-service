@@ -147,7 +147,7 @@ class PRSService:
 
                     # ruang_id is nullable in their schema
                     if j["ruang_id"]:
-                        ruang_info = self.penawaran_kelas_rpc.get_ruangan(ruang_id=j["ruang_id"])
+                        ruang_info = self.penawaran_kelas_rpc.get_ruang(ruang_id=j["ruang_id"])
                         # nama_ruang is also nullable, fall back to kode_ruang
                         ruangan = ruang_info.get("nama_ruang") or ruang_info.get("kode_ruang", str(j["ruang_id"]))
                     else:
@@ -605,48 +605,45 @@ class PRSService:
 
     @rpc
     def push_peserta_to_transkrip(self, id_semester):
+        """
+        Return all APPROVED enrollments from VALIDATED PRS in a semester.
+
+        Pull model (see module docstring): the Transkrip service calls this,
+        receives the peserta list, and builds the KRS/Nilai rows itself.
+        PRS does NOT call back into Transkrip here — that would create a
+        circular RPC chain (PRS -> Transkrip -> PRS).
+
+        Shape consumed by Transkrip.push_semester_ke_krs:
+            {
+              "id_semester": <int>,
+              "peserta": [
+                {"id_prs", "id_mahasiswa", "id_mata_kuliah", "id_kelas", "sks"},
+                ...
+              ]
+            }
+        """
         db = self._db()
         try:
             with db.cursor() as cur:
-                # Get all validated PRS ids for this semester
                 cur.execute(
-                    """SELECT id_prs, id_mahasiswa FROM prs
-                    WHERE id_semester = %s AND status = 'validated'
-                    ORDER BY id_mahasiswa""",
+                    """SELECT p.id_prs, p.id_mahasiswa,
+                              pd.id_mata_kuliah, pd.id_kelas, pd.sks
+                       FROM prs p
+                       JOIN prs_detail pd ON pd.id_prs = p.id_prs
+                       WHERE p.id_semester = %s
+                         AND p.status = 'validated'
+                         AND pd.status_validasi = 'approved'
+                       ORDER BY p.id_mahasiswa, pd.id_mata_kuliah""",
                     (id_semester,),
                 )
-                validated_prs = cur.fetchall()
+                rows = cur.fetchall()
 
-            if not validated_prs:
+            if not rows:
                 return {"error": "Tidak ada PRS validated untuk semester ini"}
 
-            results = []
-            for prs in validated_prs:
-                try:
-                    result = self.transkrip_rpc.push_prs_ke_krs(id_prs=prs["id_prs"])
-                    results.append({
-                        "id_prs": prs["id_prs"],
-                        "id_mahasiswa": prs["id_mahasiswa"],
-                        "status": result.get("status"),
-                        "id_krs": result.get("id_krs"),
-                        "message": result.get("message"),
-                    })
-                except Exception as e:
-                    results.append({
-                        "id_prs": prs["id_prs"],
-                        "id_mahasiswa": prs["id_mahasiswa"],
-                        "status": "error",
-                        "message": str(e),
-                    })
-
-            sukses = [r for r in results if r["status"] == "ok"]
-            gagal = [r for r in results if r["status"] != "ok"]
-
             return {
-                "message": f"{len(sukses)} KRS berhasil dibuat, {len(gagal)} gagal",
                 "id_semester": id_semester,
-                "sukses": sukses,
-                "gagal": gagal,
+                "peserta": [self._serialize_row(r) for r in rows],
             }
         finally:
             db.close()

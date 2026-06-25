@@ -1037,7 +1037,7 @@ class GatewayService:
         """
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         _, err = self._check_role(jwt_payload, allowed_types=["dosen"])
         if err:
@@ -1064,7 +1064,7 @@ class GatewayService:
         """
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         _, err = self._check_role(jwt_payload, allowed_types=["dosen"])
         if err:
@@ -1090,7 +1090,7 @@ class GatewayService:
         """
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         result = self.transkrip_rpc.get_nilai_by_kelas(id_kelas)
         return Response(json.dumps(result), status=200, mimetype="application/json")
@@ -1106,7 +1106,7 @@ class GatewayService:
         """
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         user_type = jwt_payload.get("type")
         user_id   = jwt_payload.get("user_id")
@@ -1130,7 +1130,7 @@ class GatewayService:
         """Ambil semua KRS milik seorang mahasiswa."""
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         result = self.transkrip_rpc.get_krs_by_mahasiswa(id_mahasiswa)
         return Response(json.dumps(result), status=200, mimetype="application/json")
@@ -1143,7 +1143,7 @@ class GatewayService:
         """
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         user_type = jwt_payload.get("type")
         user_id   = jwt_payload.get("user_id")
@@ -1163,7 +1163,7 @@ class GatewayService:
         """Ambil riwayat IPS mahasiswa per semester."""
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         result = self.transkrip_rpc.get_ips_per_semester(id_mahasiswa)
         return Response(json.dumps(result), status=200, mimetype="application/json")
@@ -1173,7 +1173,7 @@ class GatewayService:
         """Ambil IPK terkini mahasiswa."""
         jwt_payload, err = self.check_jwt(request)
         if err:
-            return err
+            return Response(json.dumps(err), status=401, mimetype='application/json')
 
         result = self.transkrip_rpc.get_ipk_mahasiswa(id_mahasiswa)
         return Response(json.dumps(result), status=200, mimetype="application/json")
@@ -1250,7 +1250,7 @@ class GatewayService:
     # -----------------------------------------------------------------------
 
     @http("GET", "/prs/detail/<int:id_semester>")
-    def get_prs_detail_by_semester(self, id_semester):
+    def get_prs_detail_by_semester(self, request, id_semester):
         result = self.prs_rpc.get_prs_detail_by_semester(id_semester)
         return dumps({"success": True, "data": result})
 
