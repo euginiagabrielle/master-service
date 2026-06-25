@@ -293,7 +293,7 @@ export default function DosenDashboard({ user, onLogout }) {
     if (!prsSemId) return alert('Pilih semester dulu');
     if (!confirm(`Push semua peserta PRS tervalidasi di semester #${prsSemId}?`)) return;
     try {
-      const res = await prsApi.pushPesertaToTranskrip(parseInt(prsSemId));
+      const res = await transkripApi.pushSemesterToKrs(parseInt(prsSemId));
       alert(res.success ? 'Push ke transkrip berhasil' : 'Error: ' + (res.error || 'gagal'));
     } catch (e) { alert('Error: ' + (e.response?.data?.error || e.message)); }
   };

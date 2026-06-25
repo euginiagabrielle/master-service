@@ -17,6 +17,8 @@ Routes:
   PUT    /prs/jadwal/invalidate/<id_kelas>           → invalidate_jadwal
   POST   /prs/detail/<id_detail_prs>/jadwal/snapshot → snapshot_jadwal
   POST   /prs/jadwal/snapshot/<id_detail_prs>        → sync_jadwal_snapshot
+  GET    /prs/detail/<id_detail_prs>/jadwal          → get_jadwal_by_detail
+  GET    /prs/<id_prs>/jadwal                        → get_jadwal_by_prs
   GET    /debug/dump                                 → debug_dump
 """
 
