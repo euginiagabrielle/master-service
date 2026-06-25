@@ -1,15 +1,46 @@
 import json
 import os
+import mimetypes
 import jwt
 from nameko.web.handlers import http
 from nameko.rpc import RpcProxy
 from werkzeug.wrappers import Response
+
+_UI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ui')
+_UI_PATH = os.path.join(_UI_DIR, 'index.html')
 
 
 class GatewayService:
     name = "penawaran_gateway"
 
     penawaran_kelas = RpcProxy("penawaran_kelas")
+
+    @http('GET', '/penawaran/ui')
+    def ui(self, request):
+        with open(_UI_PATH, 'r', encoding='utf-8') as f:
+            return Response(f.read(), mimetype='text/html')
+
+    @http('GET', '/penawaran/ui/<path:filename>')
+    def ui_static(self, request, filename):
+        # Serve aset statis UI (css/js). Cegah path traversal.
+        safe = os.path.normpath(filename)
+        if safe.startswith('..') or os.path.isabs(safe):
+            return Response('Forbidden', status=403)
+        full = os.path.join(_UI_DIR, safe)
+        if not os.path.isfile(full):
+            return Response('Not found', status=404)
+        mime = mimetypes.guess_type(full)[0] or 'application/octet-stream'
+        with open(full, 'r', encoding='utf-8') as f:
+            return Response(f.read(), mimetype=mime)
+
+    @http('POST', '/penawaran/login')
+    def login(self, request):
+        body = json.loads(request.get_data(as_text=True))
+        result = self.penawaran_kelas.master_login(
+            username=body.get('username'),
+            password=body.get('password'),
+        )
+        return Response(json.dumps(result), mimetype='application/json')
 
     def check_jwt(self, request):
         auth_header = request.headers.get('Authorization')
@@ -37,6 +68,71 @@ class GatewayService:
         return Response(json.dumps({"status": "error", "message": message}),
                         status=status, mimetype='application/json')
 
+    # Role yang boleh mengelola penawaran kelas (create/update/delete).
+    # Dicocokkan case-insensitive supaya tahan beda kapitalisasi data Master
+    # (mis. "Kaprodi" vs "kaprodi"). Sesuaikan jika nama role di Master berbeda.
+    PENGELOLA_ROLES = ["admin", "kaprodi", "sekprodi"]
+
+    def _check_role(self, payload, allowed_types=None, allowed_roles=None):
+        """Authorization — batasi akses berdasarkan type (dosen/mahasiswa)
+        dan/atau roles yang ada di payload JWT. Pencocokan role case-insensitive.
+        Return (payload, None) jika diizinkan, atau (None, error_dict) jika ditolak.
+        Pola ini konsisten dengan master gateway & transkrip gateway."""
+        user_type  = payload.get("type", "")
+        user_roles = [str(r).lower() for r in payload.get("roles", [])]
+        if allowed_types and user_type not in allowed_types:
+            return None, {"status": "error",
+                          "message": f"Akses ditolak. Fitur ini hanya untuk {', '.join(allowed_types)}."}
+        if allowed_roles:
+            allowed_lower = [str(r).lower() for r in allowed_roles]
+            if not any(r in allowed_lower for r in user_roles):
+                return None, {"status": "error",
+                              "message": f"Akses ditolak. Butuh salah satu role: {', '.join(allowed_roles)}."}
+        return payload, None
+
+    # Hanya admin / kaprodi / sekprodi yang boleh mengubah data penawaran.
+    def _require_pengelola(self, payload):
+        return self._check_role(payload, allowed_roles=self.PENGELOLA_ROLES)
+
+    # ────────────────────────────────────────────
+    # MASTER DATA PROXY (untuk dropdown UI)
+    # ────────────────────────────────────────────
+
+    @http('GET', '/penawaran/master/semesters')
+    def proxy_semesters(self, request):
+        jwt_payload, error = self.check_jwt(request)
+        if error:
+            return self._ok(error, status=401)
+        return self._ok(self.penawaran_kelas.get_master_semesters())
+
+    @http('GET', '/penawaran/master/units')
+    def proxy_units(self, request):
+        jwt_payload, error = self.check_jwt(request)
+        if error:
+            return self._ok(error, status=401)
+        return self._ok(self.penawaran_kelas.get_master_units())
+
+    @http('GET', '/penawaran/master/courses')
+    def proxy_courses(self, request):
+        jwt_payload, error = self.check_jwt(request)
+        if error:
+            return self._ok(error, status=401)
+        return self._ok(self.penawaran_kelas.get_master_courses())
+
+    @http('GET', '/penawaran/master/lecturers')
+    def proxy_lecturers(self, request):
+        jwt_payload, error = self.check_jwt(request)
+        if error:
+            return self._ok(error, status=401)
+        return self._ok(self.penawaran_kelas.get_master_lecturers())
+
+    @http('GET', '/penawaran/master/curriculums')
+    def proxy_curriculums(self, request):
+        jwt_payload, error = self.check_jwt(request)
+        if error:
+            return self._ok(error, status=401)
+        return self._ok(self.penawaran_kelas.get_master_curriculums())
+
     # ────────────────────────────────────────────
     # RUANG
     # ────────────────────────────────────────────
@@ -46,6 +142,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         body = json.loads(request.get_data(as_text=True))
         result = self.penawaran_kelas.create_ruang(body)
@@ -81,6 +180,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         body = json.loads(request.get_data(as_text=True))
         result = self.penawaran_kelas.update_ruang(ruang_id, body)
@@ -93,6 +195,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         result = self.penawaran_kelas.hapus_ruang(ruang_id)
         if isinstance(result, dict) and result.get("error"):
@@ -108,6 +213,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         body = json.loads(request.get_data(as_text=True))
         result = self.penawaran_kelas.create_kelas(body)
@@ -157,6 +265,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         body = json.loads(request.get_data(as_text=True))
         result = self.penawaran_kelas.update_kelas(kelas_id, body)
@@ -169,6 +280,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         result = self.penawaran_kelas.nonaktifkan_kelas(kelas_id)
         if isinstance(result, dict) and result.get("error"):
@@ -184,6 +298,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         body = json.loads(request.get_data(as_text=True))
         result = self.penawaran_kelas.tambah_dosen(
@@ -209,6 +326,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         result = self.penawaran_kelas.remove_dosen(kelas_dosen_id)
         if isinstance(result, dict) and result.get("error"):
@@ -219,11 +339,35 @@ class GatewayService:
     # JADWAL
     # ────────────────────────────────────────────
 
+    @http('GET', '/penawaran/jadwal')
+    def list_jadwal(self, request):
+        jwt_payload, error = self.check_jwt(request)
+        if error:
+            return self._ok(error, status=401)
+
+        kelas_id   = request.args.get('kelas_id')
+        tipe       = request.args.get('tipe')
+        is_outdated = request.args.get('is_outdated')
+
+        kwargs = {}
+        if kelas_id:
+            kwargs['kelas_id'] = int(kelas_id)
+        if tipe:
+            kwargs['tipe'] = tipe
+        if is_outdated is not None and is_outdated != '':
+            kwargs['is_outdated'] = is_outdated.lower() == 'true'
+
+        result = self.penawaran_kelas.list_jadwal(**kwargs)
+        return self._ok(result)
+
     @http('POST', '/penawaran/kelas/<int:kelas_id>/jadwal')
     def buat_jadwal(self, request, kelas_id):
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         body = json.loads(request.get_data(as_text=True))
         result = self.penawaran_kelas.buat_jadwal(kelas_id, body)
@@ -245,6 +389,9 @@ class GatewayService:
         jwt_payload, error = self.check_jwt(request)
         if error:
             return self._ok(error, status=401)
+        _, role_error = self._require_pengelola(jwt_payload)
+        if role_error:
+            return self._ok(role_error, status=403)
 
         result = self.penawaran_kelas.hapus_jadwal(jadwal_id)
         if isinstance(result, dict) and result.get("error"):

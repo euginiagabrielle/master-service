@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penawaran Kelas — Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/penawaran/ui/css/styles.css">
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="top-bar">
+    <span class="brand"><i class="bi bi-mortarboard-fill me-2"></i>Penawaran Kelas</span>
+</div>
+
+<!-- Token bar -->
+<div class="token-bar" id="loginBar">
+    <span id="tokenStatus" class="small ms-2"></span>
+    <button id="btnLogin" class="btn btn-sm btn-primary ms-auto" onclick="openLoginModal()">
+        <i class="bi bi-box-arrow-in-right me-1"></i>Login
+    </button>
+    <button id="btnLogout" class="btn btn-sm btn-outline-danger ms-auto d-none" onclick="doLogout()">Logout</button>
+</div>
+
+<!-- Content -->
+<div class="container-fluid py-4 px-4">
+
+    <!-- Main tabs -->
+    <ul class="nav nav-pills mb-4" id="mainTabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="#" onclick="switchTab('ruang'); return false;">
+                <i class="bi bi-door-open me-1"></i>Ruang
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="switchTab('kelas'); return false;">
+                <i class="bi bi-journal-bookmark me-1"></i>Kelas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="switchTab('jadwal'); return false;">
+                <i class="bi bi-calendar3 me-1"></i>Jadwal
+            </a>
+        </li>
+    </ul>
+
+    <!-- ── RUANG TAB ───────────────────────────────────────────────────── -->
+    <div id="tab-ruang">
+        <div class="card-panel">
+            <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                <select id="f-ruang-tipe" class="form-select form-select-sm" style="width:130px" onchange="loadRuang()">
+                    <option value="">Semua Tipe</option>
+                    <option value="kelas">Kelas</option>
+                    <option value="lab">Lab</option>
+                    <option value="aula">Aula</option>
+                </select>
+                <input id="f-ruang-gedung" type="text" class="form-control form-control-sm" style="width:150px"
+                       placeholder="Gedung..." oninput="loadRuang()">
+                <select id="f-ruang-status" class="form-select form-select-sm" style="width:130px" onchange="loadRuang()">
+                    <option value="">Semua Status</option>
+                    <option value="tersedia">Tersedia</option>
+                    <option value="nonaktif">Nonaktif</option>
+                </select>
+                <button class="btn btn-sm btn-outline-secondary" onclick="loadRuang()">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button class="btn btn-sm btn-primary ms-auto" onclick="openRuangModal()">
+                    <i class="bi bi-plus-lg me-1"></i>Tambah Ruang
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Kode</th><th>Nama</th><th>Tipe</th>
+                            <th>Kapasitas</th><th>Gedung</th><th>Status</th><th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ruang-tbody">
+                        <tr><td colspan="7" class="text-center text-muted py-4">Memuat...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── KELAS TAB ───────────────────────────────────────────────────── -->
+    <div id="tab-kelas" style="display:none">
+
+        <!-- List view -->
+        <div id="kelas-list">
+            <div class="card-panel">
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                    <select id="f-kelas-semester" class="form-select form-select-sm" style="width:200px">
+                        <option value="">Semua Semester</option>
+                    </select>
+                    <select id="f-kelas-unit" class="form-select form-select-sm" style="width:180px">
+                        <option value="">Semua Unit</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadKelas()">
+                        <i class="bi bi-search me-1"></i>Filter
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadKelas(true)">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary ms-auto" onclick="openKelasModal()">
+                        <i class="bi bi-plus-lg me-1"></i>Tambah Kelas
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Kode Kelas</th><th>Mata Kuliah</th><th>Semester</th>
+                                <th>Kuota</th><th>Terisi</th><th>Sisa</th>
+                                <th>Ruang Ujian</th><th>Status</th><th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kelas-tbody">
+                            <tr><td colspan="9" class="text-center text-muted py-4">
+                                Masukkan filter dan klik Filter, atau klik <i class="bi bi-arrow-clockwise"></i> untuk semua kelas
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail view -->
+        <div id="kelas-detail" style="display:none">
+            <button class="btn btn-sm btn-outline-secondary mb-3" onclick="backToKelas()">
+                <i class="bi bi-arrow-left me-1"></i>Kembali
+            </button>
+
+            <div class="detail-header mb-4">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <h5 class="mb-1 fw-bold" id="detail-kode">—</h5>
+                        <div class="small opacity-80" id="detail-info">—</div>
+                    </div>
+                    <button class="btn btn-sm btn-light" onclick="openKelasModalFromDetail()">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Dosen -->
+                <div class="col-12 col-lg-5">
+                    <div class="card-panel h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-person-badge me-2 text-primary"></i>Dosen</h6>
+                            <button class="btn btn-sm btn-primary" onclick="openDosenModal()">
+                                <i class="bi bi-plus-lg me-1"></i>Tambah
+                            </button>
+                        </div>
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th>Lecturer ID</th><th>Peran</th><th></th></tr></thead>
+                            <tbody id="dosen-tbody">
+                                <tr><td colspan="3" class="text-center text-muted py-3">Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Jadwal -->
+                <div class="col-12 col-lg-7">
+                    <div class="card-panel h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>Jadwal</h6>
+                            <button class="btn btn-sm btn-primary" onclick="openJadwalModal()">
+                                <i class="bi bi-plus-lg me-1"></i>Tambah
+                            </button>
+                        </div>
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr><th>Tipe</th><th>Hari / Tanggal</th><th>Jam</th><th>Ruang</th><th>Status</th><th></th></tr>
+                            </thead>
+                            <tbody id="jadwal-tbody">
+                                <tr><td colspan="6" class="text-center text-muted py-3">Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── JADWAL TAB ────────────────────────────────────────────────────── -->
+    <div id="tab-jadwal" style="display:none">
+        <ul class="nav nav-pills mb-3" id="jadwalSubTabs">
+            <li class="nav-item"><a class="nav-link active" href="#" id="jadwal-subtab-tabel"
+                onclick="switchJadwalView('tabel'); return false;"><i class="bi bi-list-ul me-1"></i>Tabel</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" id="jadwal-subtab-grid"
+                onclick="switchJadwalView('grid'); return false;"><i class="bi bi-calendar-week me-1"></i>Kalender Mingguan</a></li>
+        </ul>
+
+        <div id="jadwal-view-tabel">
+        <div class="card-panel">
+            <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                <select id="f-jadwal-kelas" class="form-select form-select-sm" style="width:200px">
+                    <option value="">Semua Kelas</option>
+                </select>
+                <select id="f-jadwal-tipe" class="form-select form-select-sm" style="width:130px">
+                    <option value="">Semua Tipe</option>
+                    <option value="kuliah">Kuliah</option>
+                    <option value="uts">UTS</option>
+                    <option value="uas">UAS</option>
+                </select>
+                <select id="f-jadwal-status" class="form-select form-select-sm" style="width:140px">
+                    <option value="">Semua Status</option>
+                    <option value="false">Aktif</option>
+                    <option value="true">Nonaktif</option>
+                </select>
+                <button class="btn btn-sm btn-outline-secondary" onclick="loadJadwal()">
+                    <i class="bi bi-search me-1"></i>Cari
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="loadJadwal(true)">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <span id="jadwal-count" class="small text-muted ms-2"></span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Jadwal ID</th>
+                            <th>Kelas ID</th>
+                            <th>Tipe</th>
+                            <th>Hari / Tanggal</th>
+                            <th>Jam</th>
+                            <th>Ruang ID</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jadwal-all-tbody">
+                        <tr><td colspan="8" class="text-center text-muted py-4">
+                            Gunakan filter di atas lalu klik <strong>Cari</strong>, atau klik <i class="bi bi-arrow-clockwise"></i> untuk semua jadwal
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div><!-- /#jadwal-view-tabel -->
+
+        <!-- Kalender Mingguan (grid view) -->
+        <div id="jadwal-view-grid" style="display:none">
+            <div class="card-panel">
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                    <select id="g-jadwal-kelas" class="form-select form-select-sm" style="width:200px">
+                        <option value="">Semua Kelas</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadJadwalGrid()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Muat
+                    </button>
+                    <span class="small text-muted ms-2">Hanya jadwal aktif. UTS/UAS ditempatkan menurut hari dari tanggalnya.</span>
+                    <span id="jadwal-grid-count" class="small text-muted ms-auto"></span>
+                </div>
+                <div id="jadwal-grid-body">
+                    <div class="text-center text-muted py-4">Klik <strong>Muat</strong> untuk menampilkan kalender.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── MODAL: Ruang ─────────────────────────────────────────────────────── -->
+<!-- ── MODAL: Login ─────────────────────────────────────────────────────── -->
+<div class="modal fade" id="modalLogin" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-arrow-in-right me-2"></i>Login</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">
+                    Login diverifikasi oleh <strong>Master Service</strong>.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="login-username" autocomplete="username"
+                           onkeydown="if(event.key==='Enter') doLogin()">
+                </div>
+                <div class="mb-1">
+                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="login-password" autocomplete="current-password"
+                           onkeydown="if(event.key==='Enter') doLogin()">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-primary" id="btnDoLogin" onclick="doLogin()">Masuk</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── MODAL: Ruang ─────────────────────────────────────────────────────── -->
+<div class="modal fade" id="modalRuang" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRuangTitle">Tambah Ruang</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="r-id">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label">Kode Ruang <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="r-kode" placeholder="e.g. P-203">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Nama Ruang</label>
+                        <input type="text" class="form-control" id="r-nama" placeholder="e.g. Ruang Kelas P203">
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label">Tipe</label>
+                        <select class="form-select" id="r-tipe">
+                            <option value="kelas">Kelas</option>
+                            <option value="lab">Lab</option>
+                            <option value="aula">Aula</option>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label">Kapasitas</label>
+                        <input type="number" class="form-control" id="r-kapasitas" value="40" min="0">
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="r-status">
+                            <option value="tersedia">Tersedia</option>
+                            <option value="nonaktif">Nonaktif</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Gedung</label>
+                        <input type="text" class="form-control" id="r-gedung" placeholder="e.g. Gedung P">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-primary" onclick="saveRuang()">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── MODAL: Kelas ─────────────────────────────────────────────────────── -->
+<div class="modal fade" id="modalKelas" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalKelasTitle">Tambah Kelas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="k-id">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Kode Kelas <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="k-kode" placeholder="e.g. IF301-A">
+                    </div>
+                    <div class="col-12" id="k-course-group">
+                        <label class="form-label">Mata Kuliah <span class="text-danger">*</span></label>
+                        <select class="form-select" id="k-course">
+                            <option value="">— pilih mata kuliah —</option>
+                        </select>
+                    </div>
+                    <div class="col-6" id="k-semester-group">
+                        <label class="form-label">Semester <span class="text-danger">*</span></label>
+                        <select class="form-select" id="k-semester">
+                            <option value="">— pilih semester —</option>
+                        </select>
+                    </div>
+                    <div class="col-6" id="k-unit-group">
+                        <label class="form-label">Unit / Prodi <span class="text-danger">*</span></label>
+                        <select class="form-select" id="k-unit">
+                            <option value="">— pilih unit —</option>
+                        </select>
+                    </div>
+                    <div class="col-12" id="k-curriculum-group">
+                        <label class="form-label">Kurikulum <span class="text-muted small">(opsional)</span></label>
+                        <select class="form-select" id="k-curriculum">
+                            <option value="">— pilih kurikulum —</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Kuota</label>
+                        <input type="number" class="form-control" id="k-kuota" value="30" min="0">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Ruang Ujian <span class="text-muted small">(opsional)</span></label>
+                        <select class="form-select" id="k-ruang-ujian">
+                            <option value="">— tidak ada —</option>
+                        </select>
+                    </div>
+                    <div class="col-12" id="k-status-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="k-status">
+                            <option value="aktif">Aktif</option>
+                            <option value="nonaktif">Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-primary" onclick="saveKelas()">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── MODAL: Dosen ─────────────────────────────────────────────────────── -->
+<div class="modal fade" id="modalDosen" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Dosen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Dosen <span class="text-danger">*</span></label>
+                    <select class="form-select" id="d-lecturer-id">
+                        <option value="">— pilih dosen —</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Peran</label>
+                    <select class="form-select" id="d-peran">
+                        <option value="pengampu">Pengampu</option>
+                        <option value="asisten">Asisten</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-primary" onclick="saveDosen()">Tambah</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── MODAL: Jadwal ────────────────────────────────────────────────────── -->
+<div class="modal fade" id="modalJadwal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Jadwal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Tipe</label>
+                        <select class="form-select" id="j-tipe" onchange="toggleJadwalFields()">
+                            <option value="kuliah">Kuliah (mingguan)</option>
+                            <option value="uts">UTS</option>
+                            <option value="uas">UAS</option>
+                        </select>
+                    </div>
+                    <div class="col-12" id="j-hari-group">
+                        <label class="form-label">Hari <span class="text-danger">*</span></label>
+                        <select class="form-select" id="j-hari">
+                            <option value="">— pilih hari —</option>
+                            <option>Senin</option><option>Selasa</option><option>Rabu</option>
+                            <option>Kamis</option><option>Jumat</option><option>Sabtu</option>
+                        </select>
+                    </div>
+                    <div class="col-12" id="j-tanggal-group" style="display:none">
+                        <label class="form-label">Tanggal <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="j-tanggal">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Jam Mulai <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="j-jam-mulai">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Jam Selesai <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="j-jam-selesai">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">
+                            Ruang
+                            <span class="text-muted small" id="j-ruang-hint">
+                                — opsional untuk UTS/UAS jika sudah diset di kelas
+                            </span>
+                        </label>
+                        <select class="form-select" id="j-ruang-id">
+                            <option value="">— pilih ruang (opsional) —</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-primary" onclick="saveJadwal()">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/penawaran/ui/js/core.js"></script>
+<script src="/penawaran/ui/js/auth.js"></script>
+<script src="/penawaran/ui/js/ruang.js"></script>
+<script src="/penawaran/ui/js/kelas.js"></script>
+<script src="/penawaran/ui/js/jadwal.js"></script>
+<script src="/penawaran/ui/js/init.js"></script>
+</body>
+</html>
