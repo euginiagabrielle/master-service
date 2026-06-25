@@ -7,7 +7,14 @@ export const login = (username, password) =>
 // ===== ACADEMIC UNITS =====
 export const getAllUnits = () => api.get('/master/units').then(r => r.data);
 export const getUnitById = (id) => api.get(`/master/units/${id}`).then(r => r.data);
-export const createUnit = (data) => api.post('/master/units', data).then(r => r.data);
+export const createUnit = (data) => {
+  const payload = {
+    name: data.name || data.unit_name,
+    type: data.type || data.unit_type,
+    parent_id: data.parent_id,
+  };
+  return api.post('/master/units', payload).then(r => r.data);
+};
 export const updateUnit = (id, data) => api.put(`/master/units/${id}`, data).then(r => r.data);
 export const deleteUnit = (id) => api.delete(`/master/units/${id}`).then(r => r.data);
 
@@ -39,7 +46,15 @@ export const getRolesByLecturer = (lecturerId) => api.get(`/master/lecturers/${l
 export const getAllCourses = () => api.get('/master/courses').then(r => r.data);
 export const getCourseById = (id) => api.get(`/master/courses/${id}`).then(r => r.data);
 export const getCoursesByUnit = (unitId) => api.get(`/master/units/${unitId}/courses`).then(r => r.data);
-export const createCourse = (data) => api.post('/master/courses', data).then(r => r.data);
+export const createCourse = (data) => {
+  const payload = {
+    code: data.code || data.course_code,
+    name: data.name || data.course_name,
+    sks: data.sks,
+    unit_id: data.unit_id,
+  };
+  return api.post('/master/courses', payload).then(r => r.data);
+};
 export const updateCourse = (id, data) => api.put(`/master/courses/${id}`, data).then(r => r.data);
 export const deleteCourse = (id) => api.delete(`/master/courses/${id}`).then(r => r.data);
 

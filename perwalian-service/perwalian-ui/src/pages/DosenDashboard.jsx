@@ -136,6 +136,19 @@ export default function DosenDashboard({ user, onLogout }) {
     return s ? `${s.name} ${s.year}` : `Semester #${id}`;
   };
 
+  const getPerwalianInfo = (perwalianId) => {
+    const p = perwalians.find(p => p.id === perwalianId);
+    if (!p) return `Perwalian #${perwalianId}`;
+    const dw = dosenWalis.find(d => d.id === p.dosen_wali_id);
+    if (!dw) return `#${perwalianId} - ${getSemesterName(p.semester_id)}`;
+    const student = students.find(s => s.id === dw.student_id);
+    const lecturer = lecturers.find(l => l.id === dw.lecturer_id);
+    const studentName = student?.name || `Student #${dw.student_id}`;
+    const lecturerName = lecturer?.name || `Lecturer #${dw.lecturer_id}`;
+    const nrp = student?.nrp || '';
+    return `${studentName}${nrp ? ` (${nrp})` : ''} - Dosen: ${lecturerName} | ${getSemesterName(p.semester_id)}`;
+  };
+
   // ===== PRS handlers =====
   const handleLookupPrs = async () => {
     if (!prsLookupStudent || !prsSemId) return alert('Pilih mahasiswa & semester');
@@ -417,22 +430,52 @@ export default function DosenDashboard({ user, onLogout }) {
               <h3 className="font-semibold mb-4">Buat Perwalian</h3>
               <form onSubmit={handleCreatePerwalian} className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Dosen Wali (relasi)</label>
-                  <select value={formPerwalian.dosen_wali_id} onChange={(e) => setFormPerwalian({ ...formPerwalian, dosen_wali_id: e.target.value })} className="w-full px-3 py-2 border rounded" required>
-                    <option value="">-- Pilih --</option>
-                    {mahasiswaWali.map(mw => {
-                      const sid = mw.student_id || mw.id;
-                      const student = students.find(s => s.id === sid);
-                      return (<option key={mw.id || mw.dosen_wali_id} value={mw.id || mw.dosen_wali_id}>#{mw.id || mw.dosen_wali_id} - {student?.name || sid}</option>);
-                    })}
-                  </select>
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-1">Semester</label>
-                  <select value={formPerwalian.semester_id} onChange={(e) => setFormPerwalian({ ...formPerwalian, semester_id: e.target.value })} className="w-full px-3 py-2 border rounded" required>
+                  <select value={formPerwalian.semester_id} onChange={(e) => setFormPerwalian({ ...formPerwalian, semester_id: e.target.value, dosen_wali_id: '' })} className="w-full px-3 py-2 border rounded" required>
                     <option value="">-- Pilih Semester --</option>
                     {semesters.map(s => <option key={s.id} value={s.id}>{s.is_active ? '🟢 ' : ''}{s.name} {s.year}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Mahasiswa Wali</label>
+                  <select
+                    value={formPerwalian.dosen_wali_id}
+                    onChange={(e) => setFormPerwalian({ ...formPerwalian, dosen_wali_id: e.target.value })}
+                    className="w-full px-3 py-2 border rounded"
+                    required
+                    disabled={!formPerwalian.semester_id}
+                  >
+                    <option value="">
+                      {!formPerwalian.semester_id ? '-- Pilih semester dulu --' : '-- Pilih Mahasiswa --'}
+                    </option>
+                    {formPerwalian.semester_id && mahasiswaWali
+                      .filter(mw => {
+                        const dwId = mw.id || mw.dosen_wali_id;
+                        // Filter: hanya mahasiswa wali yang BELUM punya perwalian di semester ini
+                        return !perwalians.some(p =>
+                          p.dosen_wali_id === dwId &&
+                          p.semester_id === parseInt(formPerwalian.semester_id)
+                        );
+                      })
+                      .map(mw => {
+                        const sid = mw.student_id || mw.id;
+                        const student = students.find(s => s.id === sid);
+                        const dwId = mw.id || mw.dosen_wali_id;
+                        return (
+                          <option key={dwId} value={dwId}>
+                            {student?.name || `Student #${sid}`} ({student?.nrp || '-'})
+                          </option>
+                        );
+                      })}
+                  </select>
+                  {formPerwalian.semester_id && mahasiswaWali.filter(mw => {
+                    const dwId = mw.id || mw.dosen_wali_id;
+                    return !perwalians.some(p => p.dosen_wali_id === dwId && p.semester_id === parseInt(formPerwalian.semester_id));
+                  }).length === 0 && (
+                    <p className="text-xs text-yellow-600 mt-1">
+                      ⚠️ Semua mahasiswa wali sudah punya perwalian di semester ini.
+                    </p>
+                  )}
                 </div>
                 <button type="submit" className="w-full bg-emerald-600 text-white py-2 rounded">Buat</button>
               </form>
@@ -445,7 +488,7 @@ export default function DosenDashboard({ user, onLogout }) {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-medium">Perwalian #{p.id}</p>
-                        <p className="text-sm text-gray-600">Dosen Wali ID: {p.dosen_wali_id} | {getSemesterName(p.semester_id)}</p>
+                        <p className="text-sm text-gray-600">{getPerwalianInfo(p.id)}</p>
                         <p className="text-sm mt-1"><span className={`px-2 py-0.5 rounded text-xs ${p.is_prs_allowed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{p.is_prs_allowed ? '✓ Tervalidasi' : '⏳ Belum'}</span></p>
                       </div>
                       <div className="flex gap-2">
@@ -474,7 +517,7 @@ export default function DosenDashboard({ user, onLogout }) {
                   <label className="block text-sm font-medium mb-1">Perwalian</label>
                   <select value={formCatatan.perwalian_id} onChange={(e) => setFormCatatan({ ...formCatatan, perwalian_id: e.target.value })} className="w-full px-3 py-2 border rounded" required>
                     <option value="">-- Pilih Perwalian --</option>
-                    {perwalians.map(p => <option key={p.id} value={p.id}>#{p.id} - {getSemesterName(p.semester_id)}</option>)}
+                    {perwalians.map(p => <option key={p.id} value={p.id}>#{p.id} - {getPerwalianInfo(p.id)}</option>)}
                   </select>
                 </div>
                 <div>
@@ -487,12 +530,15 @@ export default function DosenDashboard({ user, onLogout }) {
                 <label className="block text-sm font-medium mb-1">Lihat Catatan:</label>
                 <select value={selectedPerwalianId || ''} onChange={(e) => loadCatatan(parseInt(e.target.value))} className="w-full px-3 py-2 border rounded">
                   <option value="">-- Pilih Perwalian --</option>
-                  {perwalians.map(p => <option key={p.id} value={p.id}>#{p.id} - {getSemesterName(p.semester_id)}</option>)}
+                  {perwalians.map(p => <option key={p.id} value={p.id}>#{p.id} - {getPerwalianInfo(p.id)}</option>)}
                 </select>
               </div>
             </div>
             <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-              <h3 className="font-semibold mb-4">Catatan {selectedPerwalianId && `(Perwalian #${selectedPerwalianId})`}</h3>
+              <h3 className="font-semibold mb-4">
+                Catatan Bimbingan
+                {selectedPerwalianId && <span className="text-sm font-normal text-gray-600 ml-2">— {getPerwalianInfo(selectedPerwalianId)}</span>}
+              </h3>
               <div className="space-y-3">
                 {catatans.map(c => (
                   <div key={c.id} className="border rounded p-4 bg-gray-50">

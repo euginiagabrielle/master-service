@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import * as masterApi from '../api/master';
 
+function decodeJwt(token) {
+  try {
+    const base64Payload = token.split('.')[1];
+    const payload = JSON.parse(atob(base64Payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return payload;
+  } catch (e) {
+    console.error('Gagal decode JWT:', e);
+    return {};
+  }
+}
+
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -16,12 +27,14 @@ export default function Login({ onLogin }) {
       const res = await masterApi.login(username, password);
 
       if (res.status === 'success') {
+        const payload = decodeJwt(res.token);
+
         localStorage.setItem('jwt_token', res.token);
         localStorage.setItem('user_info', JSON.stringify({
+          user_id: payload.user_id,
           type: res.type,
           roles: res.roles,
-          username,
-          user_id: res.user_id,
+          username: username,
         }));
         onLogin();
       } else {

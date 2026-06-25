@@ -49,7 +49,7 @@ export default function MahasiswaDashboard({ user, onLogout }) {
           masterApi.getStudentById(studentId).catch(() => null),
           masterApi.getAllSemesters().catch(() => []),
         ]);
-        setProfile(profileData);
+        setProfile(profileData?.data || profileData);
         setSemesters(semestersData);
         const active = semestersData.find(s => s.is_active);
         if (active) {
@@ -191,13 +191,38 @@ export default function MahasiswaDashboard({ user, onLogout }) {
           <div className="bg-white rounded-lg shadow p-6 max-w-xl">
             {profile ? (
               <dl className="space-y-3">
-                <div className="flex justify-between border-b pb-2"><dt className="font-medium text-gray-700">NRP</dt><dd className="font-mono">{profile.nrp}</dd></div>
-                <div className="flex justify-between border-b pb-2"><dt className="font-medium text-gray-700">Nama</dt><dd>{profile.name || profile.student_name}</dd></div>
-                <div className="flex justify-between border-b pb-2"><dt className="font-medium text-gray-700">Email</dt><dd>{profile.email || profile.student_email}</dd></div>
-                <div className="flex justify-between border-b pb-2"><dt className="font-medium text-gray-700">Status</dt><dd><span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">{profile.status || profile.student_status || 'active'}</span></dd></div>
-                <div className="flex justify-between"><dt className="font-medium text-gray-700">Unit ID</dt><dd>{profile.unit_id || '-'}</dd></div>
+                <div className="flex justify-between border-b pb-2">
+                  <dt className="font-medium text-gray-700">User ID</dt>
+                  <dd className="font-mono">{profile.id || profile.student_id || studentId}</dd>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                  <dt className="font-medium text-gray-700">NRP</dt>
+                  <dd className="font-mono">{profile.nrp || profile.student_nrp || '-'}</dd>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                  <dt className="font-medium text-gray-700">Nama</dt>
+                  <dd>{profile.name || profile.student_name || profile.nama || '-'}</dd>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                  <dt className="font-medium text-gray-700">Email</dt>
+                  <dd>{profile.email || profile.student_email || '-'}</dd>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                  <dt className="font-medium text-gray-700">Status</dt>
+                  <dd>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
+                      {profile.status || profile.student_status || 'active'}
+                    </span>
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="font-medium text-gray-700">Unit ID</dt>
+                  <dd>{profile.unit_id || profile.id_unit || '-'}</dd>
+                </div>
               </dl>
-            ) : <p className="text-gray-500">Profile tidak ditemukan</p>}
+            ) : (
+              <p className="text-gray-500">Profile tidak ditemukan (user_id: {studentId})</p>
+            )}
           </div>
         </div>
       )}
