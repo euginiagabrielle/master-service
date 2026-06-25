@@ -12,7 +12,10 @@ Dibangun menggunakan **Nameko** (RPC over RabbitMQ) dengan **HTTP Gateway** di p
 - [Menjalankan dengan Docker](#menjalankan-dengan-docker)
 - [Environment Variables](#environment-variables)
 - [Autentikasi (JWT)](#autentikasi-jwt)
+- [Admin UI](#admin-ui)
 - [Referensi HTTP API](#referensi-http-api)
+  - [Login](#login-1)
+  - [Master Data Proxy](#master-data-proxy)
   - [Ruang](#ruang)
   - [Kelas](#kelas)
   - [Dosen per Kelas](#dosen-per-kelas)
@@ -25,14 +28,26 @@ Dibangun menggunakan **Nameko** (RPC over RabbitMQ) dengan **HTTP Gateway** di p
 
 ## Ketergantungan ke Master Service
 
-Service ini memanggil `master_service` via RPC untuk memvalidasi data pada dua endpoint:
+Service ini memanggil `master_service` via RPC untuk dua keperluan:
+
+**Validasi data saat menyimpan:**
 
 | Endpoint | RPC yang dipanggil | Yang divalidasi |
 |----------|--------------------|-----------------|
 | `POST /penawaran/kelas` | `get_course_by_id`, `get_semester_by_id`, `get_unit_by_id` | course, semester, dan unit harus ada di master |
 | `POST /penawaran/kelas/<id>/dosen` | `get_lecturer_by_id` | dosen harus terdaftar di master |
 
-> Jika `master_service` sedang tidak berjalan, kedua endpoint di atas akan **timeout**. Semua endpoint lainnya berjalan secara independen.
+**Mengambil data master untuk UI dropdown:**
+
+| Endpoint | RPC yang dipanggil |
+|----------|--------------------|
+| `GET /penawaran/master/semesters` | `get_all_semesters` |
+| `GET /penawaran/master/units` | `get_all_units` |
+| `GET /penawaran/master/courses` | `get_all_courses` |
+| `GET /penawaran/master/lecturers` | `get_all_lecturers` |
+| `GET /penawaran/master/curriculums` | `get_all_curriculums` |
+
+> Jika `master_service` sedang tidak berjalan, endpoint validasi dan dropdown master akan **timeout**. Endpoint Ruang, Jadwal, dan semua operasi baca lainnya berjalan secara independen.
 
 ---
 
@@ -95,6 +110,7 @@ docker compose down       # hentikan container, data DB tetap ada
 docker compose down -v    # hentikan container + hapus data DB
 ```
 
+
 ---
 
 ## Environment Variables
@@ -114,12 +130,27 @@ docker compose down -v    # hentikan container + hapus data DB
 
 ## Autentikasi (JWT)
 
-Semua endpoint HTTP membutuhkan token JWT yang valid. Token diperoleh dari endpoint login milik master service.
+Sistem autentikasi menggunakan JWT yang di-sign dengan secret key yang sama antara master service dan service ini. Token yang dikeluarkan oleh master service **langsung valid** di service ini tanpa perlu panggilan tambahan ke master — JWT bersifat stateless.
 
-**Format header:**
+### Alur autentikasi
+
 ```
-Authorization: Bearer <token>
+1. User login di Master Service (gateway utama)
+   → Master Service mengeluarkan token JWT
+   → Redirect ke http://<host>:8000/penawaran/ui?token=<jwt>
+
+2. Admin UI menangkap token dari URL, menyimpannya di localStorage,
+   lalu membersihkan URL agar token tidak terlihat di address bar.
+
+3. Semua request berikutnya kirim token di header:
+   Authorization: Bearer <token>
+
+4. Gateway memverifikasi signature token menggunakan JWT_SECRET_KEY
+   → jika valid, request dilanjutkan ke service
+   → jika tidak valid, request ditolak dengan HTTP 401
 ```
+
+> JWT_SECRET_KEY **harus sama persis** antara master service dan service ini (diset di `.env`). Selama key sama, token dari master otomatis diterima tanpa integrasi tambahan.
 
 **Struktur payload token:**
 ```json
@@ -162,12 +193,82 @@ print(token)
 
 ---
 
+## Admin UI
+
+Service ini menyertakan antarmuka admin berbasis web untuk mengelola Ruang, Kelas, Dosen, dan Jadwal.
+
+**Akses:** `http://<host>:8000/penawaran/ui`
+
+| Tab | Fitur |
+|-----|-------|
+| **Ruang** | Daftar dengan filter tipe/gedung/status, tambah, edit, nonaktifkan |
+| **Kelas** | Daftar dengan filter semester/unit (dropdown), tambah, edit, nonaktifkan |
+| **Detail Kelas** | Klik ikon 👁 — kelola dosen dan jadwal per kelas |
+| **Jadwal** | Lihat semua jadwal lintas kelas, filter tipe/status/kelas, nonaktifkan |
+
+**Semua field ID (mata kuliah, semester, unit, dosen, ruang) tampil sebagai dropdown** — data diambil otomatis dari master service saat login. Tidak perlu input angka ID secara manual.
+
+### Login
+
+Login dilakukan **hanya melalui Master Service**. Setelah berhasil login di Master Service, browser akan diarahkan ke UI ini dengan token disisipkan di URL (`?token=<jwt>`). Token ditangkap otomatis, disimpan ke `localStorage`, lalu URL dibersihkan.
+
+Token tetap aktif selama tab tidak ditutup. Klik **Logout** untuk keluar.
+
+---
+
 ## Referensi HTTP API
 
 **Base URL:** `http://<host>:8000`
 
 Semua request membutuhkan header `Authorization: Bearer <token>`.  
 Semua response bertipe `Content-Type: application/json`.
+
+---
+
+## Login
+
+### `POST /penawaran/login` — Login via Master Service
+
+Endpoint proxy yang meneruskan kredensial ke `master_service.login()` dan mengembalikan token JWT. Tersedia untuk penggunaan programatik (misalnya testing via curl/Postman).
+
+> Admin UI **tidak menggunakan endpoint ini** — login UI dilakukan melalui redirect dari Master Service.
+
+> Endpoint ini **tidak membutuhkan token** — digunakan justru untuk mendapatkan token.
+
+**Request body:**
+```json
+{
+  "username": "nip_atau_email_dosen",
+  "password": "password123"
+}
+```
+
+**Respons `200`** (format sesuai yang dikembalikan master service):
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Catatan:** Endpoint ini hanya tersedia saat service ini berjalan secara **standalone** (gateway sendiri). Saat berjalan dalam instance gabungan bersama project leader, gunakan endpoint login milik gateway utama (`POST /login`).
+
+---
+
+## Master Data Proxy
+
+Endpoint ini meneruskan permintaan ke `master_service` via RPC dan mengembalikan hasilnya. Digunakan oleh Admin UI untuk mengisi dropdown — **tidak perlu dipanggil secara manual** dalam integrasi normal antar service.
+
+Semua endpoint membutuhkan token JWT.
+
+| Endpoint | Keterangan |
+|----------|------------|
+| `GET /penawaran/master/semesters` | Daftar semua semester |
+| `GET /penawaran/master/units` | Daftar semua unit / prodi |
+| `GET /penawaran/master/courses` | Daftar semua mata kuliah |
+| `GET /penawaran/master/lecturers` | Daftar semua dosen |
+| `GET /penawaran/master/curriculums` | Daftar semua kurikulum |
+
+Format respons mengikuti format yang dikembalikan `master_service` secara langsung.
 
 ---
 
@@ -643,7 +744,8 @@ class ServiceLain:
 | `get_dosen_by_kelas(kelas_id)` | int | list dict kelas_dosen |
 | `remove_dosen(kelas_dosen_id)` | int | `{"ok": True}` atau `{"error": ...}` |
 | `buat_jadwal(kelas_id, data)` | int, dict | `jadwal_id` (int) atau `{"error": ...}` |
-| `get_jadwal(kelas_id)` | int | list dict jadwal |
+| `get_jadwal(kelas_id)` | int | list dict jadwal milik kelas |
+| `list_jadwal(kelas_id, tipe, is_outdated)` | semua opsional | list dict jadwal dengan filter |
 | `hapus_jadwal(jadwal_id)` | int | `{"ok": True}` |
 
 ---
