@@ -11,7 +11,13 @@ export const deleteRuang = (id) => api.delete(`/penawaran/ruang/${id}`).then(r =
 export const getAllKelas = (params = {}) => api.get('/penawaran/kelas', { params }).then(r => r.data);
 export const getKelasById = (id) => api.get(`/penawaran/kelas/${id}`).then(r => r.data);
 export const getKelasTersedia = (semesterId) => api.get('/penawaran/kelas/tersedia', { params: { semester_id: semesterId } }).then(r => r.data);
-export const createKelas = (data) => api.post('/penawaran/kelas', data).then(r => r.data);
+export const createKelas = (data) => {
+  const payload = {
+    ...data,
+    kode_kelas: data.kode_kelas || data.kelas_no,
+  };
+  return api.post('/penawaran/kelas', payload).then(r => r.data);
+};
 export const updateKelas = (id, data) => api.put(`/penawaran/kelas/${id}`, data).then(r => r.data);
 export const deleteKelas = (id) => api.delete(`/penawaran/kelas/${id}`).then(r => r.data);
 

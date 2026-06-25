@@ -74,7 +74,7 @@ export default function DosenDashboard({ user, onLogout }) {
   const [formStudent, setFormStudent] = useState({ nrp: '', name: '', email: '', password: '', status: 'active', unit_id: '' });
   const [formCourse, setFormCourse] = useState({ course_code: '', course_name: '', sks: 3, unit_id: '' });
   const [formSemester, setFormSemester] = useState({ name: 'Gasal', year: '2025/2026', is_active: false });
-  const [formRuang, setFormRuang] = useState({ nama_ruang: '', tipe: 'kelas', gedung: '', kapasitas: 40, status: 'active' });
+  const [formRuang, setFormRuang] = useState({ kode_ruang: '', nama_ruang: '', tipe: 'kelas', gedung: '', kapasitas: 40, status: 'active' });
   const [formKelas, setFormKelas] = useState({ course_id: '', semester_id: '', unit_id: '', kapasitas: 40, kelas_no: 'A' });
 
   const lecturerId = user.user_id;
@@ -587,7 +587,7 @@ export default function DosenDashboard({ user, onLogout }) {
           {prsResult && (
             <>
               <div className="bg-white rounded-lg shadow p-6 mb-4">
-                <h3 className="font-semibold text-lg">PRS #{prsResult.id_prs || prsResult.prs?.id_prs}</h3>
+                <h3 className="font-semibold text-lg">PRS</h3>
                 <p className="text-sm text-gray-600 mt-1">Status: <span className={`px-2 py-0.5 rounded text-xs ${prsResult.status === 'verified' ? 'bg-green-100 text-green-700' : prsResult.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{prsResult.status || 'pending'}</span></p>
                 <p className="text-sm text-gray-600">Total SKS: {prsDetailItems.reduce((sum, d) => sum + (d.sks || 0), 0)}</p>
               </div>
@@ -801,6 +801,7 @@ export default function DosenDashboard({ user, onLogout }) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <form onSubmit={(e) => handleCreate('ruang', e)} className="bg-white rounded-lg shadow p-6 space-y-3">
               <h3 className="font-semibold">Tambah Ruang</h3>
+              <input value={formRuang.kode_ruang} onChange={(e) => setFormRuang({...formRuang, kode_ruang: e.target.value})} placeholder="Kode Ruang (R-101)" required className="w-full px-3 py-2 border rounded" />
               <input value={formRuang.nama_ruang} onChange={(e) => setFormRuang({...formRuang, nama_ruang: e.target.value})} placeholder="Nama (P-101)" required className="w-full px-3 py-2 border rounded" />
               <input value={formRuang.gedung} onChange={(e) => setFormRuang({...formRuang, gedung: e.target.value})} placeholder="Gedung" required className="w-full px-3 py-2 border rounded" />
               <select value={formRuang.tipe} onChange={(e) => setFormRuang({...formRuang, tipe: e.target.value})} className="w-full px-3 py-2 border rounded">
@@ -812,8 +813,8 @@ export default function DosenDashboard({ user, onLogout }) {
             <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
               <h3 className="font-semibold mb-4">Daftar Ruang ({ruang.length})</h3>
               <table className="w-full text-sm">
-                <thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Nama</th><th className="px-3 py-2 text-left">Gedung</th><th className="px-3 py-2 text-left">Tipe</th><th className="px-3 py-2 text-left">Kap</th><th className="px-3 py-2 text-left">Aksi</th></tr></thead>
-                <tbody>{ruang.map(r => (<tr key={r.id || r.ruang_id} className="border-b"><td className="px-3 py-2 font-mono">{r.id || r.ruang_id}</td><td className="px-3 py-2">{r.nama_ruang}</td><td className="px-3 py-2">{r.gedung}</td><td className="px-3 py-2">{r.tipe}</td><td className="px-3 py-2">{r.kapasitas}</td><td className="px-3 py-2"><button onClick={() => handleDelete('ruang', r.id || r.ruang_id)} className="text-red-600 text-xs">Hapus</button></td></tr>))}</tbody>
+                <thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Kode</th><th className="px-3 py-2 text-left">Nama</th><th className="px-3 py-2 text-left">Gedung</th><th className="px-3 py-2 text-left">Tipe</th><th className="px-3 py-2 text-left">Kap</th><th className="px-3 py-2 text-left">Aksi</th></tr></thead>
+                <tbody>{ruang.map(r => (<tr key={r.id || r.ruang_id} className="border-b"><td className="px-3 py-2 font-mono">{r.id || r.ruang_id}</td><td className="px-3 py-2 font-mono">{r.kode_ruang || '-'}</td><td className="px-3 py-2">{r.nama_ruang}</td><td className="px-3 py-2">{r.gedung}</td><td className="px-3 py-2">{r.tipe}</td><td className="px-3 py-2">{r.kapasitas}</td><td className="px-3 py-2"><button onClick={() => handleDelete('ruang', r.id || r.ruang_id)} className="text-red-600 text-xs">Hapus</button></td></tr>))}</tbody>
               </table>
             </div>
           </div>
